@@ -1,0 +1,1805 @@
+/* =====================================================================
+   HOJA DE ESTILOS CSS - HOTEL RIVIERA
+   =====================================================================
+   Nota de aprendizaje: 
+   Esta hoja contiene todos los estilos visuales del proyecto de la hotelera.
+   Usamos la fuente "Outfit" para que se vea premium y moderna.
+   Todas las reglas están comentadas en español para entender qué hace cada cosa.
+   ===================================================================== */
+
+/* 1. RESETEO DE ESTILOS BÁSICOS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Esto hace que el ancho incluya bordes y rellenos para que no se descuadren las cajas */
+    font-family: 'Outfit', sans-serif; /* Fuente descargada de Google Fonts */
+    scroll-behavior: smooth; /* Hace que el salto entre secciones sea suave al hacer clic en el menú */
+}
+
+/* Variables de color para no andar repitiendo códigos hexadecimales */
+:root {
+    --azul-oscuro: #003064;    /* Color principal (cabecera, botones principales) */
+    --azul-profundo: #001e3d;  /* Fondo del pie de página y textos fuertes */
+    --azul-celeste: #eef5fc;   /* Color de fondo claro para alternar secciones */
+    --azul-brillante: #1a73e8; /* Enlaces y hover activos */
+    --gris-oscuro: #333333;    /* Texto de cuerpo */
+    --gris-suave: #777777;     /* Texto secundario */
+    --blanco: #ffffff;
+    --verde-confirmar: #43a047; /* Color verde de la imagen de referencia para confirmar reserva */
+    --rojo-cancelar: #d32f2f;  /* Color para cancelar reservas */
+    --sombra-tarjeta: 0 8px 30px rgba(0, 0, 0, 0.08); /* Sombra elegante para dar relieve */
+    --transicion-suave: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Animación de hover fluida */
+}
+
+body {
+    background-color: #fcfdfe;
+    color: var(--gris-oscuro);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Contenedor estándar para centrar el contenido en pantallas grandes */
+.contenedor {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Títulos y decoraciones */
+h1, h2, h3, h4 {
+    font-weight: 700;
+    color: var(--azul-profundo);
+}
+
+.seccion-seccion {
+    padding: 80px 0;
+}
+
+.bg-gris {
+    background-color: var(--azul-celeste);
+}
+
+.seccion-encabezado {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.seccion-encabezado h2 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+
+.linea-decorativa {
+    width: 60px;
+    height: 4px;
+    background-color: var(--azul-oscuro);
+    margin: 0 auto 15px auto;
+    border-radius: 2px;
+}
+
+.seccion-encabezado p {
+    color: var(--gris-suave);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Spinner de carga */
+.cargando-spinner {
+    text-align: center;
+    padding: 40px;
+    font-size: 1.2rem;
+    color: var(--azul-oscuro);
+    grid-column: 1 / -1; /* Ocupa todo el ancho si está en rejilla */
+}
+
+/* =====================================================================
+   2. BOTONES MODERNOS Y EFECTOS
+   ===================================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: var(--transicion-suave);
+    text-decoration: none;
+}
+
+.btn-primario {
+    background-color: var(--azul-oscuro);
+    color: var(--blanco);
+}
+
+.btn-primario:hover {
+    background-color: var(--azul-profundo);
+    transform: translateY(-2px); /* Flota un poquito hacia arriba */
+    box-shadow: 0 5px 15px rgba(0, 48, 100, 0.3);
+}
+
+.btn-secundario {
+    background-color: #d4a373; /* Tono dorado/arena como el Hotel Paraíso */
+    color: var(--blanco);
+}
+
+.btn-secundario:hover {
+    background-color: #c59262;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 163, 115, 0.4);
+}
+
+.btn-verde {
+    background-color: var(--verde-confirmar);
+    color: var(--blanco);
+}
+
+.btn-verde:hover {
+    background-color: #388e3c;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(67, 160, 71, 0.3);
+}
+
+.btn-rojo {
+    background-color: var(--rojo-cancelar);
+    color: var(--blanco);
+}
+
+.btn-rojo:hover {
+    background-color: #c62828;
+}
+
+.btn-bloque {
+    display: flex;
+    width: 100%;
+}
+
+.btn-largo {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+}
+
+/* =====================================================================
+   3. BARRA DE NAVEGACIÓN
+   ===================================================================== */
+.barra-navegacion {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--blanco);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    padding: 15px 0;
+}
+
+.nav-contenedor {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logotipo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--azul-profundo);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logotipo i {
+    color: var(--azul-oscuro);
+}
+
+.logotipo span {
+    color: var(--azul-oscuro);
+    font-weight: 500;
+}
+
+.enlaces-nav {
+    display: flex;
+    gap: 30px;
+}
+
+.enlaces-nav a {
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    transition: var(--transicion-suave);
+    position: relative;
+    padding: 5px 0;
+}
+
+.enlaces-nav a:hover,
+.enlaces-nav a.activo {
+    color: var(--azul-oscuro);
+}
+
+/* Efecto visual de línea azul debajo del enlace activo */
+.enlaces-nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--azul-oscuro);
+    transition: var(--transicion-suave);
+}
+
+.enlaces-nav a:hover::after,
+.enlaces-nav a.activo::after {
+    width: 100%;
+}
+
+.usuario-seccion {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.btn-usuario-panel {
+    background-color: var(--azul-celeste);
+    color: var(--azul-oscuro);
+    border: 1px solid rgba(0, 48, 100, 0.15);
+}
+
+.btn-usuario-panel:hover {
+    background-color: #e0ecf8;
+}
+
+/* =====================================================================
+   4. BANNER HERO (BIENVENIDA)
+   ===================================================================== */
+.hero {
+    height: 480px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--blanco);
+    text-align: center;
+    position: relative;
+}
+
+.hero-contenedor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    max-width: 100%;
+}
+
+.hero h1 {
+    font-size: 4.2rem;
+    color: var(--blanco);
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.hero p {
+    font-size: 1.4rem;
+    font-weight: 300;
+    opacity: 0.9;
+}
+
+/* Animaciones al cargar el Hero */
+@keyframes subirArticulo {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animar-arriba {
+    animation: subirArticulo 0.8s ease forwards;
+}
+
+.retraso-1 {
+    animation-delay: 0.2s;
+    opacity: 0;
+}
+
+.retraso-2 {
+    animation-delay: 0.4s;
+    opacity: 0;
+}
+
+/* =====================================================================
+   5. BUSCADOR INTERACTIVO
+   ===================================================================== */
+.buscador-seccion {
+    margin-top: -60px; /* Hace que flote sobre el Hero */
+    position: relative;
+    z-index: 10;
+}
+
+.tarjeta-buscador {
+    background-color: var(--blanco);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 48, 100, 0.05);
+}
+
+.tarjeta-buscador h2 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    color: var(--azul-oscuro);
+    font-weight: 600;
+}
+
+.tarjeta-buscador form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto;
+    gap: 20px;
+    align-items: end;
+}
+
+.grupo-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.grupo-campo label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--azul-profundo);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.grupo-campo input,
+.grupo-campo select,
+.grupo-campo textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: var(--transicion-suave);
+    background-color: #fafafa;
+}
+
+.grupo-campo input:focus,
+.grupo-campo select:focus,
+.grupo-campo textarea:focus {
+    border-color: var(--azul-oscuro);
+    background-color: var(--blanco);
+    box-shadow: 0 0 0 3px rgba(0, 48, 100, 0.1);
+}
+
+/* Campos del formulario bloqueados (Lectura) */
+.campo-bloqueado {
+    background-color: #f0f2f5 !important;
+    border-color: #e0e0e0 !important;
+    color: #666 !important;
+    cursor: not-allowed;
+}
+
+.btn-buscar {
+    height: 50px;
+    font-size: 1rem;
+    padding: 0 30px;
+}
+
+/* =====================================================================
+   6. GRID DE HABITACIONES Y TARJETAS
+   ===================================================================== */
+.habitaciones-cuadrícula {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.tarjeta-habitacion {
+    background-color: var(--blanco);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--sombra-tarjeta);
+    transition: var(--transicion-suave);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.tarjeta-habitacion:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+
+.habitacion-img-contenedor {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+}
+
+.habitacion-img-contenedor img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transicion-suave);
+}
+
+.tarjeta-habitacion:hover .habitacion-img-contenedor img {
+    transform: scale(1.08); /* Zoom de la imagen en hover */
+}
+
+.precio-tag {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    background-color: var(--azul-oscuro);
+    color: var(--blanco);
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.precio-tag span {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+.habitacion-detalles {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Rellena el espacio para que los botones queden alineados abajo */
+}
+
+.habitacion-detalles h3 {
+    font-size: 1.35rem;
+    margin-bottom: 10px;
+}
+
+.habitacion-detalles p {
+    color: var(--gris-suave);
+    font-size: 0.92rem;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.habitacion-info-adicional {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    color: var(--gris-oscuro);
+}
+
+.habitacion-info-adicional span i {
+    color: var(--azul-oscuro);
+    margin-right: 5px;
+}
+
+/* Alertas para la vista */
+.alerta {
+    padding: 15px 20px;
+    border-radius: 6px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    font-size: 0.95rem;
+}
+
+.alerta-info {
+    background-color: var(--azul-celeste);
+    color: var(--azul-oscuro);
+    border: 1px solid rgba(0, 48, 100, 0.1);
+}
+
+.alerta-advertencia {
+    background-color: #fff8e1;
+    color: #b78103;
+    border: 1px solid #ffe082;
+}
+
+.btn-cerrar-alerta {
+    background: none;
+    border: none;
+    color: var(--azul-oscuro);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-cerrar-alerta:hover {
+    text-decoration: underline;
+}
+
+/* =====================================================================
+   7. SECCIÓN DE SERVICIOS
+   ===================================================================== */
+.servicios-cuadrícula,
+.servicios-contenedor {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.tarjeta-servicio {
+    background-color: var(--blanco);
+    border-radius: 8px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    transition: var(--transicion-suave);
+    border: 1px solid rgba(0, 48, 100, 0.02);
+}
+
+.tarjeta-servicio:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--sombra-tarjeta);
+}
+
+.servicio-icono-caja {
+    width: 60px;
+    height: 60px;
+    background-color: var(--azul-celeste);
+    color: var(--azul-oscuro);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 15px auto;
+    transition: var(--transicion-suave);
+}
+
+.tarjeta-servicio:hover .servicio-icono-caja {
+    background-color: var(--azul-oscuro);
+    color: var(--blanco);
+}
+
+.tarjeta-servicio h3 {
+    font-size: 1.15rem;
+    margin-bottom: 10px;
+}
+
+.tarjeta-servicio p {
+    color: var(--gris-suave);
+    font-size: 0.88rem;
+}
+
+.servicio-precio {
+    display: block;
+    margin-top: 10px;
+    font-weight: 700;
+    color: var(--azul-oscuro);
+}
+
+/* =====================================================================
+   8. GALERÍA DE FOTOS E INTERACTIVIDAD
+   ===================================================================== */
+.galeria-cuadrícula {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.foto-item {
+    position: relative;
+    height: 200px;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.foto-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transicion-suave);
+}
+
+.foto-info {
+    position: absolute;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: var(--blanco);
+    transition: var(--transicion-suave);
+}
+
+.foto-item:hover img {
+    transform: scale(1.1);
+}
+
+.foto-item:hover .foto-info {
+    bottom: 0;
+}
+
+.foto-info h4 {
+    color: var(--blanco);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* =====================================================================
+   9. TESTIMONIOS Y FORMULARIO
+   ===================================================================== */
+.testimonios-contenedor {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.tarjeta-testimonio {
+    background-color: var(--blanco);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: var(--sombra-tarjeta);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.tarjeta-testimonio::before {
+    content: '\201C'; /* Icono gigante de comilla */
+    position: absolute;
+    top: 15px;
+    right: 30px;
+    font-size: 5rem;
+    font-family: serif;
+    color: #e3f2fd;
+    line-height: 1;
+}
+
+.testimonio-estrellas {
+    color: #ffb300; /* Color dorado para las estrellas */
+    font-size: 0.9rem;
+}
+
+.testimonio-comentario {
+    font-style: italic;
+    color: #555;
+    font-size: 0.95rem;
+    position: relative;
+    z-index: 2;
+    flex-grow: 1;
+}
+
+.testimonio-autor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+}
+
+.testimonio-foto {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #ddd;
+}
+
+.autor-nombre h4 {
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.autor-nombre span {
+    font-size: 0.75rem;
+    color: var(--gris-suave);
+}
+
+.invitacion-login-testimonio {
+    text-align: center;
+    background-color: var(--blanco);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    border: 1px dashed rgba(0, 48, 100, 0.15);
+}
+
+.invitacion-login-testimonio a {
+    color: var(--azul-oscuro);
+    font-weight: 600;
+}
+
+.dejar-testimonio-caja {
+    background-color: var(--blanco);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: var(--sombra-tarjeta);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.dejar-testimonio-caja h3 {
+    margin-bottom: 15px;
+    font-size: 1.25rem;
+}
+
+.estrellas-rating {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.input-estrellas {
+    display: flex;
+    flex-direction: row-reverse; /* Reversa para hacer funcionar el hover de estrellas en CSS */
+    justify-content: flex-end;
+}
+
+.input-estrellas input {
+    display: none;
+}
+
+.input-estrellas label {
+    font-size: 1.3rem;
+    color: #e0e0e0;
+    cursor: pointer;
+    transition: var(--transicion-suave);
+    padding: 0 3px;
+}
+
+.input-estrellas label:hover,
+.input-estrellas label:hover ~ label,
+.input-estrellas input:checked ~ label {
+    color: #ffb300;
+}
+
+/* =====================================================================
+   10. PIE DE PÁGINA (FOOTER) Y NEWSLETTER
+   ===================================================================== */
+.pie-pagina {
+    background-color: var(--azul-profundo);
+    color: #bccbdc;
+    padding-top: 0;
+}
+
+.boletin-seccion {
+    background-color: var(--azul-oscuro);
+    padding: 35px 0;
+    color: var(--blanco);
+    margin-bottom: 60px;
+}
+
+.boletin-contenedor {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.boletin-texto h3 {
+    color: var(--blanco);
+    margin-bottom: 5px;
+    font-size: 1.4rem;
+}
+
+.boletin-texto p {
+    font-size: 0.95rem;
+    opacity: 0.85;
+}
+
+.boletin-formulario {
+    display: flex;
+    gap: 10px;
+    flex-grow: 1;
+    max-width: 500px;
+}
+
+.boletin-formulario input {
+    flex-grow: 1;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 6px;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.pie-enlaces-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    padding-bottom: 60px;
+}
+
+.pie-info-hotel h4 {
+    color: var(--blanco);
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+}
+
+.pie-info-hotel p {
+    font-size: 0.92rem;
+    margin-bottom: 25px;
+    opacity: 0.8;
+}
+
+.social-iconos {
+    display: flex;
+    gap: 12px;
+}
+
+.social-iconos a {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.08);
+    color: var(--blanco);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transicion-suave);
+    text-decoration: none;
+}
+
+.social-iconos a:hover {
+    background-color: var(--blanco);
+    color: var(--azul-oscuro);
+    transform: translateY(-3px);
+}
+
+.pie-enlaces-grid h4 {
+    color: var(--blanco);
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 8px;
+}
+
+.pie-enlaces-grid h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background-color: #d4a373;
+}
+
+.pie-lista {
+    list-style: none;
+}
+
+.pie-lista li {
+    margin-bottom: 12px;
+}
+
+.pie-lista a {
+    color: #bccbdc;
+    text-decoration: none;
+    font-size: 0.92rem;
+    transition: var(--transicion-suave);
+}
+
+.pie-lista a:hover {
+    color: var(--blanco);
+    padding-left: 5px;
+}
+
+.pie-contacto li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.pie-contacto li i {
+    color: #d4a373;
+    margin-top: 4px;
+}
+
+.pie-copy {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 25px 0;
+    text-align: center;
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* =====================================================================
+   11. DISEÑO DE MODALES ANIMADOS
+   ===================================================================== */
+.capa-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 20, 50, 0.6); /* Capa oscura semitransparente */
+    backdrop-filter: blur(5px); /* Efecto difuminado moderno (Glassmorphism) */
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none; /* Evita clics cuando está oculto */
+    transition: opacity 0.4s ease;
+    padding: 20px;
+}
+
+/* Cuando se abre el modal, añadimos esta clase con JavaScript */
+.capa-modal.activo {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-tarjeta {
+    background-color: var(--blanco);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    position: relative;
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+
+.capa-modal.activo .modal-tarjeta {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.modal-chico {
+    max-width: 500px;
+    overflow: hidden;
+}
+
+/* Animaciones del Modal */
+@keyframes shake {
+    0%, 100% { transform: translateY(0) scale(1) translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateY(0) scale(1) translateX(-8px); }
+    20%, 40%, 60%, 80% { transform: translateY(0) scale(1) translateX(8px); }
+}
+
+.shake {
+    animation: shake 0.6s ease-in-out;
+}
+
+/* Ajustes visuales para el modal de Login */
+#formulario-login .grupo-campo {
+    margin-bottom: 20px;
+}
+
+#formulario-login input {
+    padding: 14px 16px;
+    font-size: 1.05rem;
+}
+
+#formulario-login label {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.modal-mediano {
+    max-width: 700px;
+}
+
+.cerrar-modal-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--gris-suave);
+    cursor: pointer;
+    z-index: 10;
+    transition: var(--transicion-suave);
+}
+
+.cerrar-modal-btn:hover {
+    color: var(--azul-oscuro);
+    transform: rotate(90deg);
+}
+
+.modal-cuerpo {
+    padding: 40px;
+}
+
+.modal-titulo {
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.modal-titulo i {
+    color: var(--azul-oscuro);
+}
+
+.modal-enlaces-pie {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-enlaces-pie a {
+    color: var(--azul-brillante);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.modal-enlaces-pie a:hover {
+    text-decoration: underline;
+}
+
+/* Grid de dos columnas para formularios largos */
+.grupo-campo-fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+/* Ajustes especiales para modal de reserva */
+.modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    max-height: 90vh;
+}
+
+.modal-reserva-info {
+    background-color: var(--azul-celeste);
+    border-right: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-reserva-info img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.padding-cuerpo {
+    padding: 30px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.padding-cuerpo h3 {
+    font-size: 1.4rem;
+}
+
+.desc-corta {
+    font-size: 0.88rem;
+    color: var(--gris-suave);
+}
+
+.detalles-iconos-reserva {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.detalles-iconos-reserva span i {
+    color: var(--azul-oscuro);
+    width: 20px;
+}
+
+.servicios-adicionales-reserva h4 {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 48, 100, 0.1);
+    padding-bottom: 5px;
+}
+
+.servicios-lista-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 6px 10px;
+    background-color: var(--blanco);
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.checklist-item label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.checklist-precio {
+    font-weight: 700;
+    color: var(--azul-oscuro);
+}
+
+.modal-reserva-form {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modal-reserva-form h2 {
+    font-size: 1.6rem;
+}
+
+.modal-reserva-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Resumen interactivo de costos del modal (Basado en la imagen derecha) */
+.reserva-resumen-costos {
+    background-color: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.costo-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.costo-total-destacado {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--azul-profundo);
+    border-top: 1px dashed #cccccc;
+    padding-top: 12px;
+    margin-top: 8px;
+}
+
+/* Perfil y listado de reservas */
+.perfil-info-resumen {
+    background-color: var(--azul-celeste);
+    border-radius: 6px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.95rem;
+    border: 1px solid rgba(0, 48, 100, 0.08);
+}
+
+.lista-reservas-usuario {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.item-reserva {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.reserva-cabecera {
+    background-color: #f7f9fa;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.9rem;
+}
+
+.reserva-id {
+    font-weight: 700;
+    color: var(--azul-oscuro);
+}
+
+/* Estados de reserva en badges */
+.reserva-estado-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-pendiente { background-color: #fff3e0; color: #e65100; }
+.badge-confirmada { background-color: #e8f5e9; color: #1b5e20; }
+.badge-cancelada { background-color: #ffebee; color: #c62828; }
+.badge-finalizada { background-color: #eceff1; color: #37474f; }
+
+.reserva-contenido {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+    font-size: 0.9rem;
+}
+
+.reserva-detalles-texto p {
+    margin-bottom: 6px;
+}
+
+.reserva-detalles-texto p i {
+    color: var(--azul-oscuro);
+    width: 20px;
+}
+
+.reserva-servicios-listados {
+    background-color: #fafafa;
+    border-radius: 4px;
+    padding: 10px 15px;
+    font-size: 0.8rem;
+}
+
+.reserva-servicios-listados h5 {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--gris-oscuro);
+}
+
+.reserva-servicios-listados ul {
+    list-style: none;
+    padding-left: 5px;
+}
+
+.reserva-servicios-listados ul li {
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.reserva-acciones {
+    background-color: #fcfcfc;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f0f0f0;
+}
+
+.reserva-total-pago {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+/* =====================================================================
+   ESTILOS ADICIONALES: TARJETA DE CRÉDITO Y TICKET DIGITAL (NUEVOS)
+   ===================================================================== */
+
+/* Contenedor input con icono */
+.input-con-icono {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-con-icono input {
+    width: 100%;
+    padding-right: 40px !important;
+}
+
+.input-con-icono i {
+    position: absolute;
+    right: 15px;
+    color: var(--gris-suave);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+/* Grupo de botones en fila */
+.grupo-botones-fila {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.grupo-botones-fila .btn {
+    flex: 1;
+}
+
+/* Tarjeta de crédito interactiva en CSS */
+.tarjeta-credito-vista {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); /* Degradado metálico oscuro */
+    width: 100%;
+    max-width: 380px;
+    height: 185px;
+    border-radius: 12px;
+    padding: 22px;
+    color: var(--blanco);
+    box-shadow: 0 10px 25px rgba(0, 48, 100, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0 auto 25px auto;
+    font-family: monospace; /* Estilo de texto de tarjeta clásica */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Brillo metálico oblicuo de la tarjeta */
+.tarjeta-credito-vista::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 45%,
+        rgba(255, 255, 255, 0.08) 50%,
+        transparent 55%
+    );
+    transform: rotate(30deg);
+    pointer-events: none;
+}
+
+.tarjeta-franja-superior {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chip-icono {
+    font-size: 1.9rem;
+    color: #ffca28; /* Dorado */
+}
+
+.logo-tarjeta-tipo {
+    font-size: 2.2rem;
+    opacity: 0.95;
+    transition: var(--transicion-suave);
+}
+
+.tarjeta-numero-vista {
+    font-size: 1.3rem;
+    letter-spacing: 3px;
+    text-align: center;
+    margin: 15px 0;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.tarjeta-inferior {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.tarjeta-etiqueta {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.tarjeta-valor-vista {
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Pantalla de carga simulando transacción */
+.panel-procesando {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.panel-procesando h3 {
+    font-size: 1.3rem;
+    margin-top: 15px;
+    color: var(--azul-oscuro);
+}
+
+.panel-procesando p {
+    color: var(--gris-suave);
+    font-size: 0.9rem;
+    margin-top: 8px;
+    max-width: 350px;
+    margin: 8px auto 0 auto;
+}
+
+/* =====================================================================
+   TICKET DIGITAL ESTILO RECIBO FISICO
+   ===================================================================== */
+.ticket-impresion {
+    background-color: var(--blanco);
+    border: 1px solid #d2d2d2;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* Efecto de dientes de papel cortado en el ticket */
+.ticket-decoracion-diente {
+    height: 8px;
+    background-image: radial-gradient(circle, transparent 70%, #fff 70%);
+    background-size: 12px 16px;
+    background-position: -6px -8px;
+    background-color: #d2d2d2;
+}
+
+.ticket-cuerpo {
+    padding: 30px;
+    font-family: 'Courier New', Courier, monospace; /* Fuente de cajero o boleto */
+    color: #222;
+}
+
+.ticket-encabezado {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.ticket-encabezado h3 {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.45rem;
+    color: var(--azul-profundo);
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.ticket-encabezado p {
+    font-size: 0.85rem;
+    margin: 2px 0;
+}
+
+.fecha-ticket-actual {
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.ticket-linea-separacion {
+    border-top: 1px dashed #999;
+    margin: 15px 0;
+}
+
+.ticket-info p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.88rem;
+}
+
+.ticket-info p span {
+    color: #555;
+}
+
+.ticket-servicios-lista h4 {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    color: #444;
+}
+
+.ticket-servicios-lista ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.ticket-servicios-lista ul li {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+}
+
+.ticket-total-seccion p {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    margin-bottom: 4px;
+}
+
+.ticket-monto-pagado {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--azul-oscuro);
+    border-top: 1px dashed #777;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.ticket-codigo-barras {
+    text-align: center;
+    margin-top: 25px;
+    letter-spacing: 1px;
+}
+
+.codigo-barras-lineas {
+    font-size: 1.6rem;
+    font-family: monospace;
+    color: #000;
+    letter-spacing: 2px;
+}
+
+.codigo-barras-texto {
+    font-size: 0.72rem;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* =====================================================================
+   SOPORTE PARA IMPRESIÓN DEL TICKET (ESCONDEMOS TODO LO DEMÁS AL IMPRIMIR)
+   ===================================================================== */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #ticket-final-area, #ticket-final-area * {
+        visibility: visible;
+    }
+    #ticket-final-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: 500px;
+        border: none;
+        box-shadow: none;
+    }
+    .ticket-decoracion-diente {
+        display: none;
+    }
+}
+
+/* Lightbox Overlay (Diseño Premium con Tarjeta de Dos Columnas) */
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 10, 30, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    padding: 20px;
+}
+
+.lightbox-overlay.activo {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lightbox-tarjeta {
+    background-color: var(--blanco);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 950px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    overflow: hidden;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+    transform: translateY(30px) scale(0.95);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightbox-overlay.activo .lightbox-tarjeta {
+    transform: translateY(0) scale(1);
+}
+
+.lightbox-imagen-lado {
+    height: 500px;
+    background-color: #000;
+}
+
+.lightbox-imagen-lado img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.lightbox-info-lado {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: var(--blanco);
+}
+
+.lightbox-info-lado h3 {
+    font-size: 1.8rem;
+    color: var(--azul-profundo);
+    margin: 0;
+}
+
+.lightbox-info-lado p {
+    color: var(--gris-oscuro);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+.lightbox-detalles-adicionales {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 0.95rem;
+    color: var(--gris-suave);
+    border-top: 1px solid #f0f0f0;
+    padding-top: 20px;
+}
+
+.lightbox-detalles-adicionales span i {
+    color: var(--azul-oscuro);
+    margin-right: 8px;
+    width: 18px;
+}
+
+.lightbox-close-btn {
+    position: absolute;
+    top: 25px;
+    right: 30px;
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: var(--transicion-suave);
+    z-index: 2010;
+}
+
+.lightbox-close-btn:hover {
+    color: var(--blanco);
+    transform: rotate(90deg);
+}
+
+@media (max-width: 768px) {
+    .lightbox-tarjeta {
+        grid-template-columns: 1fr;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    .lightbox-imagen-lado {
+        height: 250px;
+    }
+    .lightbox-info-lado {
+        padding: 25px;
+    }
+}
+
+/* Ocultar elementos */
+.oculto {
+    display: none !important;
+}
+
+/* =====================================================================
+   12. DISEÑO RESPONSIVO (PANTALLAS CHICAS)
+   ===================================================================== */
+@media (max-width: 900px) {
+    .hero h1 {
+        font-size: 2.5rem;
+        white-space: normal;
+    }
+    
+    .tarjeta-buscador form {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .btn-buscar {
+        grid-column: span 2;
+        width: 100%;
+    }
+
+    .modal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-reserva-info {
+        border-right: none;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .boletin-contenedor {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .boletin-formulario {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .barra-navegacion {
+        padding: 10px 0;
+    }
+    
+    .enlaces-nav {
+        display: none; /* En un proyecto escolar avanzado harías menú hamburguesa, aquí lo simplificamos */
+    }
+
+    .tarjeta-buscador form {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-buscar {
+        grid-column: span 1;
+    }
+
+    .grupo-campo-fila {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .reserva-contenido {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-cuerpo {
+        padding: 20px;
+    }
+}

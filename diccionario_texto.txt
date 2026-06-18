@@ -1,0 +1,284 @@
+--- PAGE 1 ---
+1. Información General 
+Nombre de la Base de Datos: HotelDB 
+Propósito: Administrar la información relacionada con huéspedes, habitaciones, 
+reservas, servicios adicionales, testimonios y suscripciones al boletín informativo del 
+hotel. 
+Tipo de Sistema: Sistema de gestión hotelera (reservas y servicios). 
+2. Diccionario de Datos por Tabla 
+TABLA: Huespedes 
+Descripción: 
+Almacena la información personal y de contacto de los huéspedes registrados en el 
+sistema. 
+Campos: 
+Campo Tipo de Dato Restricciones Descripción 
+ID_Huesped INT PK, AUTO_INCREMENT Identificador único del 
+huésped. 
+Nombre VARCHAR(50) NOT NULL Nombre del huésped. 
+Apellido VARCHAR(50) NOT NULL Apellido del huésped. 
+Email VARCHAR(100) NOT NULL, UNIQUE, 
+CHECK 
+Correo electrónico 
+válido del huésped. 
+T elefono VARCHAR(15) UNIQUE T eléfono del huésped. 
+URL_Foto_Perfil VARCHAR(255) NULL Dirección URL de la foto 
+del huésped. 
+Fecha_Registro TIMESTAMP DEFAULT 
+CURRENT_TIMESTAMP 
+Fecha en la que se 
+registró el huésped. 
+Reglas de Negocio: 
+• El email debe cumplir con el formato básico @ y .. 
+• No se permite registrar el mismo correo dos veces.TABLA: Tipos_Habitacion 
+--- PAGE 2 ---
+Descripción: 
+Define los diferentes tipos de habitaciones disponibles en el hotel. 
+Campos: 
+Campo Tipo de Dato Restricciones Descripción 
+ID_Tipo_Habitacion INT PK, 
+AUTO_INCREMENT 
+Identificador único del 
+tipo de habitación.  
+Nombre_Tipo VARCHAR(50) NOT NULL, UNIQUE 
+Nombre del tipo de 
+habitación (Suite, Doble, 
+etc.). 
+Descripcion TEXT NULL Descripción del tipo de 
+habitación.  
+Capacidad_Maxima INT NOT NULL, CHECK 
+> 0 
+Cantidad máxima de 
+huéspedes permitidos. 
+Precio_Noche DECIMAL(10,2) NOT NULL, CHECK 
+> 0 
+Precio por noche del tipo 
+de habitación.  
+Reglas de Negocio: 
+• La capacidad máxima debe ser mayor a 0. 
+• El precio por noche debe ser mayor a 0. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+--- PAGE 3 ---
+TABLA: Habitaciones 
+Descripción: 
+Contiene el registro de las habitaciones físicas del hotel y su estado actual. 
+Campos: 
+Campo Tipo de Dato Restricciones Descripción 
+ID_Habitacion INT PK, 
+AUTO_INCREMENT 
+Identificador único de la 
+habitación.  
+ID_Tipo_Habitacion INT FK, NOT NULL Relación con el tipo de 
+habitación.  
+Numero_Habitacion VARCHAR(10) NOT NULL, UNIQUE 
+Número o código 
+identificador de la 
+habitación.  
+Estado ENUM DEFAULT 
+'Disponible' 
+Estado de la habitación 
+(Disponible, Ocupada, 
+Mantenimiento).  
+Piso INT NOT NULL, CHECK 
+> 0 
+Piso donde se encuentra 
+ubicada la habitación.  
+Valores Permitidos: 
+• Disponible 
+• Ocupada 
+• Mantenimiento 
+Reglas de Negocio: 
+• Una habitación debe pertenecer a un tipo válido. 
+• El piso debe ser mayor a 0. 
+ 
+ 
+ 
+--- PAGE 4 ---
+TABLA: Reservas 
+Descripción: 
+Registra las reservas realizadas por huéspedes para habitaciones específicas.  
+Campos: 
+Campo Tipo de 
+Dato Restricciones Descripción 
+ID_Reserva INT PK, AUTO_INCREMENT Identificador único de la 
+reserva. 
+ID_Huesped INT FK, NOT NULL Identificador del huésped 
+que realiza la reserva. 
+ID_Habitacion INT FK, NOT NULL Identificador de la 
+habitación reservada.  
+Fecha_Llegada DATE NOT NULL Fecha de entrada del 
+huésped. 
+Fecha_Salida DATE NOT NULL, CHECK Fecha de salida del 
+huésped. 
+Numero_Adultos INT NOT NULL, CHECK > 0 Número de adultos 
+registrados en la reserva. 
+Numero_Ninos INT DEFAULT 0, CHECK >= 0 Número de niños 
+registrados en la reserva. 
+Estado_Reserva ENUM DEFAULT 'Pendiente' Estado actual de la 
+reserva. 
+Fecha_Creacion TIMESTAMP DEFAULT 
+CURRENT_TIMESTAMP 
+Fecha en que se creó la 
+reserva. 
+Valores Permitidos en Estado_Reserva: 
+• Pendiente 
+• Confirmada  
+--- PAGE 5 ---
+• Cancelada 
+• Finalizada  
+Reglas de Negocio: 
+• La fecha de salida debe ser posterior a la fecha de llegada. 
+• Debe existir al menos un adulto en la reserva. 
+TABLA: Servicios 
+Descripción: 
+Catálogo de servicios adicionales que ofrece el hotel. 
+Campos: 
+Campo Tipo de Dato Restricciones Descripción 
+ID_Servicio INT PK, 
+AUTO_INCREMENT 
+Identificador único del 
+servicio. 
+Nombre_Servicio VARCHAR(100) NOT NULL, UNIQUE Nombre del servicio (Spa, 
+Desayuno, etc.). 
+Descripcion_Corta VARCHAR(255) NULL Descripción breve del 
+servicio. 
+Imagen_URL VARCHAR(255) NULL URL de imagen 
+representativa del servicio. 
+Precio DECIMAL(10,2) NOT NULL, CHECK 
+>= 0 Precio del servicio. 
+Disponible BOOLEAN DEFAULT TRUE Indica si el servicio está 
+disponible. 
+Reglas de Negocio: 
+• El precio no puede ser negativo. 
+• Solo servicios disponibles pueden agregarse a reservas. 
+ 
+ 
+--- PAGE 6 ---
+TABLA: Testimonios 
+Descripción: 
+Registra los comentarios y calificaciones realizadas por huéspedes sobre el hotel. 
+Campos: 
+Campo Tipo de 
+Dato Restricciones Descripción 
+ID_T estimonio INT PK, 
+AUTO_INCREMENT 
+Identificador único del 
+testimonio. 
+ID_Huesped INT FK, NOT NULL Huésped que realiza el 
+testimonio. 
+Comentario TEXT NOT NULL Comentario o reseña del 
+huésped. 
+Calificacion_Estrellas INT NOT NULL, CHECK 1-5 Calificación otorgada por 
+el huésped. 
+Fecha_Publicacion DATE DEFAULT 
+CURRENT_DATE 
+Fecha de publicación del 
+testimonio. 
+Aprobado BOOLEAN DEFAULT FALSE Indica si el testimonio fue 
+aprobado. 
+Reglas de Negocio: 
+• La calificación debe estar entre 1 y 5 estrellas. 
+• Los testimonios deben ser aprobados antes de mostrarse en frontend. 
+ 
+ 
+ 
+ 
+ 
+ 
+--- PAGE 7 ---
+TABLA: Suscriptores_Boletin 
+Descripción: 
+Registra los correos electrónicos que se suscriben al boletín informativo del hotel. 
+Campos: 
+Campo Tipo de Dato Restricciones Descripción 
+ID_Suscriptor INT PK, AUTO_INCREMENT Identificador único del 
+suscriptor. 
+Email VARCHAR(100) NOT NULL, UNIQUE, 
+CHECK 
+Correo electrónico del 
+suscriptor. 
+Fecha_Suscripcion DATE DEFAULT 
+CURRENT_DATE 
+Fecha en que se registró 
+la suscripción. 
+Activo BOOLEAN DEFAULT TRUE Indica si la suscripción 
+está activa. 
+Reglas de Negocio: 
+• No se permite duplicar correos. 
+• Se puede desactivar una suscripción sin eliminarla.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+--- PAGE 8 ---
+TABLA: Reservas_Servicios 
+Descripción: 
+T abla intermedia que permite asignar múltiples servicios a una reserva (relación 
+muchos a muchos).  
+Campos: 
+Campo Tipo de 
+Dato Restricciones Descripción 
+ID_Reserva INT PK, FK, NOT NULL Reserva asociada al 
+servicio. 
+ID_Servicio INT PK, FK, NOT NULL Servicio asociado a la 
+reserva. 
+Cantidad INT DEFAULT 1, CHECK > 0 Cantidad solicitada del 
+servicio. 
+Fecha_Servicio TIMESTAMP DEFAULT 
+CURRENT_TIMESTAMP 
+Fecha de asignación del 
+servicio. 
+Llave Primaria Compuesta: 
+• (ID_Reserva, ID_Servicio) 
+Reglas de Negocio: 
+• Una reserva puede contener varios servicios. 
+• La cantidad mínima de un servicio es 1.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+--- PAGE 9 ---
+3. Relaciones Entre Tablas 
+Tabla Origen Relación Tabla 
+Destino Tipo de Relación 
+Huespedes 1 → N Reservas Un huésped puede hacer muchas 
+reservas 
+Tipos_Habitacion 1 → N Habitaciones Un tipo puede tener muchas 
+habitaciones 
+Habitaciones 1 → N Reservas Una habitación puede tener varias 
+reservas 
+Huespedes 1 → N T estimonios Un huésped puede dejar varios 
+testimonios 
+Reservas N ↔ N Servicios Muchos servicios por reserva y viceversa 
+(por tabla intermedia) 
+ 
+4. Consideraciones para Backend y Frontend 
+Validaciones recomendadas en Backend: 
+• Validar que la habitación esté Disponible antes de confirmar una reserva. 
+• Validar que el número total de personas no exceda la capacidad máxima. 
+• Validar que el huésped exista antes de generar una reserva. 
+• Validar que los servicios estén disponibles antes de agregarlos a una reserva. 
+• Evitar reservas con fechas superpuestas para la misma habitación.  
+Consideraciones para Frontend: 
+• Mostrar habitaciones disponibles filtradas por fecha.  
+• Mostrar reservas por huésped. 
+• Mostrar testimonios solo si Aprobado = TRUE.  
+• Mostrar servicios solo si Disponible = TRUE.  
+ 
+--- PAGE 10 ---
+ 

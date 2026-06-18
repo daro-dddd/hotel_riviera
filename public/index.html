@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Riviera - Tu Destino Ideal de Descanso</title>
+    <!-- Fuente premium desde Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Hojas de estilo -->
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+    <!-- 1. BARRA DE NAVEGACIÓN -->
+    <header class="barra-navegacion">
+        <div class="contenedor nav-contenedor">
+            <a href="#" class="logotipo" id="nav-logo">
+                <i class="fa-solid fa-hotel"></i> Hotel <span>Riviera</span>
+            </a>
+            
+            <nav class="enlaces-nav">
+                <a href="#inicio" class="activo">Inicio</a>
+                <a href="#habitaciones">Habitaciones</a>
+                <a href="#servicios">Servicios</a>
+                <a href="#galeria">Galería</a>
+                <a href="#testimonios">Testimonios</a>
+            </nav>
+
+            <div class="usuario-seccion" id="menu-usuario">
+                <!-- Se llenará dinámicamente desde cliente.js -->
+                <button class="btn btn-primario" onclick="abrirModal('modal-login')">
+                    <i class="fa-solid fa-user-tie"></i> Iniciar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. BANNER PRINCIPAL (HERO) -->
+    <section id="inicio" class="hero" style="background-image: linear-gradient(rgba(0, 48, 100, 0.4), rgba(0, 20, 50, 0.65)), url('imagenes/banner.png');">
+        <div class="contenedor hero-contenedor">
+            <h1 class="animar-arriba">Bienvenidos a Hotel Riviera</h1>
+            <p class="animar-arriba retraso-1">Tu destino ideal para unas vacaciones inolvidables frente al mar.</p>
+            <a href="#habitaciones" class="btn btn-secundario btn-grande animar-arriba retraso-2">Ver Habitaciones</a>
+        </div>
+    </section>
+
+    <!-- 3. BUSCADOR DE DISPONIBILIDAD -->
+    <section class="buscador-seccion">
+        <div class="contenedor">
+            <div class="tarjeta-buscador">
+                <h2>Reserva tu Estadía</h2>
+                <form id="formulario-buscar" onsubmit="buscarDisponibilidad(event)">
+                    <div class="grupo-campo">
+                        <label for="buscar-llegada"><i class="fa-regular fa-calendar-days"></i> Fecha de llegada</label>
+                        <input type="date" id="buscar-llegada" required>
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="buscar-salida"><i class="fa-regular fa-calendar-days"></i> Fecha de salida</label>
+                        <input type="date" id="buscar-salida" required>
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="buscar-adultos"><i class="fa-solid fa-user"></i> Adultos</label>
+                        <select id="buscar-adultos">
+                            <option value="1">1 Adulto</option>
+                            <option value="2" selected>2 Adultos</option>
+                            <option value="3">3 Adultos</option>
+                            <option value="4">4 Adultos</option>
+                            <option value="5">5 Adultos</option>
+                        </select>
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="buscar-ninos"><i class="fa-solid fa-child"></i> Niños</label>
+                        <select id="buscar-ninos">
+                            <option value="0" selected>Sin niños</option>
+                            <option value="1">1 Niño</option>
+                            <option value="2">2 Niños</option>
+                            <option value="3">3 Niños</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primario btn-buscar">
+                        <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. SECCIÓN HABITACIONES -->
+    <section id="habitaciones" class="seccion-seccion">
+        <div class="contenedor">
+            <div class="seccion-encabezado">
+                <h2>Nuestras Habitaciones</h2>
+                <div class="linea-decorativa"></div>
+                <p>Elige el espacio perfecto adaptado a tus necesidades y disfruta del máximo confort.</p>
+            </div>
+
+            <!-- Filtro activo de búsqueda -->
+            <div id="filtro-fechas-aviso" class="alerta alerta-info oculto">
+                <p><i class="fa-solid fa-circle-info"></i> Mostrando habitaciones disponibles para el periodo: <strong id="periodo-texto"></strong></p>
+                <button class="btn-cerrar-alerta" onclick="restablecerHabitaciones()"><i class="fa-solid fa-rotate-left"></i> Mostrar todo</button>
+            </div>
+
+            <div class="habitaciones-cuadrícula" id="habitaciones-contenedor">
+                <!-- Se carga dinámicamente con JavaScript -->
+                <div class="cargando-spinner">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Cargando habitaciones...
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. SECCIÓN SERVICIOS -->
+    <section id="servicios" class="seccion-seccion bg-gris">
+        <div class="contenedor">
+            <div class="seccion-encabezado">
+                <h2>Servicios del Hotel</h2>
+                <div class="linea-decorativa"></div>
+                <p>Complementa tu estadía con nuestra oferta exclusiva de amenidades y servicios adicionales.</p>
+            </div>
+
+            <div class="servicios-contenedor" id="servicios-contenedor">
+                <!-- Se cargan los servicios dinámicamente -->
+                <div class="cargando-spinner">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Cargando servicios...
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. GALERÍA DE FOTOS -->
+    <section id="galeria" class="seccion-seccion">
+        <div class="contenedor">
+            <div class="seccion-encabezado">
+                <h2>Galería de Fotos</h2>
+                <div class="linea-decorativa"></div>
+                <p>Un recorrido visual por nuestras instalaciones, habitaciones y hermosas vistas.</p>
+            </div>
+
+            <div class="galeria-cuadrícula">
+                <div class="foto-item card-zoom">
+                    <img src="imagenes/banner.png" alt="Instalaciones del Hotel">
+                    <div class="foto-info"><h4>Fachada & Piscina</h4></div>
+                </div>
+                <div class="foto-item card-zoom">
+                    <img src="imagenes/playa_suite.png" alt="Playa del Hotel">
+                    <div class="foto-info"><h4>Nuestra Playa Privada</h4></div>
+                </div>
+                <div class="foto-item card-zoom">
+                    <img src="imagenes/deluxe.png" alt="Suite Lujo">
+                    <div class="foto-info"><h4>Interiores Suite</h4></div>
+                </div>
+                <div class="foto-item card-zoom">
+                    <img src="imagenes/spa.png" alt="Spa Riviera">
+                    <div class="foto-info"><h4>Cabinas de Spa</h4></div>
+                </div>
+                <div class="foto-item card-zoom">
+                    <img src="imagenes/restaurante.png" alt="Restaurante Gourmet">
+                    <div class="foto-info"><h4>Restaurante Riviera</h4></div>
+                </div>
+                <div class="foto-item card-zoom">
+                    <img src="imagenes/desayuno.png" alt="Desayuno Buffet">
+                    <div class="foto-info"><h4>Desayuno Premium</h4></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. SECCIÓN TESTIMONIOS -->
+    <section id="testimonios" class="seccion-seccion bg-gris">
+        <div class="contenedor">
+            <div class="seccion-encabezado">
+                <h2>Lo Que Dicen Nuestros Huéspedes</h2>
+                <div class="linea-decorativa"></div>
+                <p>Opiniones reales de personas que han vivido la experiencia Riviera.</p>
+            </div>
+
+            <div class="testimonios-contenedor" id="testimonios-lista">
+                <!-- Se carga dinámicamente -->
+            </div>
+
+            <!-- Formulario para dejar un testimonio (Solo si está logueado) -->
+            <div id="formulario-testimonio-contenedor" class="dejar-testimonio-caja oculto">
+                <h3>Cuéntanos tu Experiencia</h3>
+                <form id="formulario-testimonio" onsubmit="enviarTestimonio(event)">
+                    <div class="estrellas-rating">
+                        <span>Calificación:</span>
+                        <div class="input-estrellas">
+                            <input type="radio" name="estrellas" value="5" id="est5" checked><label for="est5"><i class="fa-solid fa-star"></i></label>
+                            <input type="radio" name="estrellas" value="4" id="est4"><label for="est4"><i class="fa-solid fa-star"></i></label>
+                            <input type="radio" name="estrellas" value="3" id="est3"><label for="est3"><i class="fa-solid fa-star"></i></label>
+                            <input type="radio" name="estrellas" value="2" id="est2"><label for="est2"><i class="fa-solid fa-star"></i></label>
+                            <input type="radio" name="estrellas" value="1" id="est1"><label for="est1"><i class="fa-solid fa-star"></i></label>
+                        </div>
+                    </div>
+                    <div class="grupo-campo">
+                        <textarea id="comentario-testimonio" rows="3" placeholder="Escribe aquí tu reseña o comentario..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primario"><i class="fa-regular fa-paper-plane"></i> Enviar Comentario</button>
+                </form>
+            </div>
+            
+            <div id="formulario-testimonio-invitacion" class="invitacion-login-testimonio">
+                <p><i class="fa-solid fa-comment-dots"></i> ¿Te has hospedado con nosotros? <a href="javascript:void(0)" onclick="abrirModal('modal-login')">Inicia sesión</a> para dejar tu comentario.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. PIE DE PÁGINA (FOOTER) Y NEWSLETTER -->
+    <footer class="pie-pagina">
+        <div class="boletin-seccion">
+            <div class="contenedor boletin-contenedor">
+                <div class="boletin-texto">
+                    <h3>Suscríbete a nuestro boletín</h3>
+                    <p>Recibe promociones especiales, descuentos exclusivos y noticias de Hotel Riviera directamente en tu correo.</p>
+                </div>
+                <form class="boletin-formulario" onsubmit="suscribirBoletin(event)">
+                    <input type="email" id="correo-boletin" placeholder="Tu correo electrónico" required>
+                    <button type="submit" class="btn btn-secundario">Suscribirse</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="contenedor pie-enlaces-grid">
+            <div class="pie-info-hotel">
+                <h4><i class="fa-solid fa-hotel"></i> Hotel Riviera</h4>
+                <p>Ofrecemos una experiencia única de descanso frente al mar con servicio de clase mundial.</p>
+                <div class="social-iconos">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4>Enlaces Rápidos</h4>
+                <ul class="pie-lista">
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="#habitaciones">Habitaciones</a></li>
+                    <li><a href="#servicios">Servicios</a></li>
+                    <li><a href="#galeria">Galería de Fotos</a></li>
+                    <li><a href="#testimonios">Testimonios</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Contacto</h4>
+                <ul class="pie-lista pie-contacto">
+                    <li><i class="fa-solid fa-location-dot"></i> Av. Costera Miguel Alemán No. 450, Riviera Nayarit, México.</li>
+                    <li><i class="fa-solid fa-phone"></i> +52 (322) 555-0199</li>
+                    <li><i class="fa-solid fa-envelope"></i> info@hotelriviera.com</li>
+                </ul>
+            </div>
+        </div>
+        <div class="pie-copy">
+            <div class="contenedor">
+                <p>&copy; 2026 Hotel Riviera. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- =====================================================================
+    MODALES (CAPAS FLOTANTES INTERACTIVAS)
+    ===================================================================== -->
+
+    <!-- A. MODAL DE INICIO DE SESIÓN -->
+    <div class="capa-modal" id="modal-login">
+        <div class="modal-tarjeta modal-chico">
+            <button class="cerrar-modal-btn" onclick="cerrarModal('modal-login')">&times;</button>
+            <div class="modal-cuerpo">
+                <h2 class="modal-titulo"><i class="fa-solid fa-lock"></i> Inicia Sesión</h2>
+                <div class="linea-decorativa"></div>
+                <form id="formulario-login" onsubmit="ejecutarLogin(event)" autocomplete="off">
+                    <div class="grupo-campo">
+                        <label for="login-email">Correo Electrónico</label>
+                        <input type="email" id="login-email" placeholder="ejemplo@correo.com" required autocomplete="off">
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="login-password">Contraseña</label>
+                        <input type="password" id="login-password" placeholder="Tu contraseña" required autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn btn-primario btn-bloque btn-largo">Iniciar Sesión</button>
+                </form>
+                <div class="modal-enlaces-pie">
+                    <p><a href="javascript:void(0)" onclick="alert('Funcionalidad escolar: Comunícate con el administrador en MySQL para resetear tu campo Contrasena.')">¿Olvidaste tu contraseña?</a></p>
+                    <p>¿No tienes una cuenta? <a href="javascript:void(0)" onclick="cambiarModal('modal-login', 'modal-registro')">Regístrate</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- B. MODAL DE REGISTRO -->
+    <div class="capa-modal" id="modal-registro">
+        <div class="modal-tarjeta modal-chico">
+            <button class="cerrar-modal-btn" onclick="cerrarModal('modal-registro')">&times;</button>
+            <div class="modal-cuerpo">
+                <h2 class="modal-titulo"><i class="fa-solid fa-user-plus"></i> Crear Cuenta</h2>
+                <div class="linea-decorativa"></div>
+                <form id="formulario-registro" onsubmit="ejecutarRegistro(event)">
+                    <div class="grupo-campo-fila">
+                        <div class="grupo-campo">
+                            <label for="reg-nombre">Nombre *</label>
+                            <input type="text" id="reg-nombre" placeholder="Juan" required>
+                        </div>
+                        <div class="grupo-campo">
+                            <label for="reg-apellido">Apellido *</label>
+                            <input type="text" id="reg-apellido" placeholder="Pérez" required>
+                        </div>
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="reg-email">Correo Electrónico *</label>
+                        <input type="email" id="reg-email" placeholder="juan.perez@correo.com" required>
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="reg-password">Contraseña *</label>
+                        <input type="password" id="reg-password" placeholder="Crea una contraseña" required>
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="reg-telefono">Teléfono</label>
+                        <input type="tel" id="reg-telefono" placeholder="+52 555-123-4567">
+                    </div>
+                    <button type="submit" class="btn btn-primario btn-bloque btn-largo">Registrarse</button>
+                </form>
+                <div class="modal-enlaces-pie">
+                    <p>¿Ya tienes cuenta? <a href="javascript:void(0)" onclick="cambiarModal('modal-registro', 'modal-login')">Inicia Sesión</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- C. MODAL DE RESERVACIÓN -->
+    <div class="capa-modal" id="modal-reserva">
+        <div class="modal-tarjeta modal-grid">
+            <button class="cerrar-modal-btn" onclick="cerrarModal('modal-reserva')">&times;</button>
+            
+            <!-- Lado Izquierdo del Modal: Información de la Habitación -->
+            <div class="modal-reserva-info">
+                <img id="reserva-room-img" src="imagenes/doble.png" alt="Habitación">
+                <div class="padding-cuerpo">
+                    <h3 id="reserva-room-name">Nombre de la Habitación</h3>
+                    <p class="desc-corta" id="reserva-room-desc">Descripción de la habitación.</p>
+                    <div class="detalles-iconos-reserva">
+                        <span><i class="fa-solid fa-users"></i> Capacidad Máxima: <span id="reserva-room-cap">2</span> personas</span>
+                        <span><i class="fa-solid fa-tag"></i> Precio por Noche: <span id="reserva-room-price">$0.00 MXN</span></span>
+                    </div>
+                    <div class="servicios-adicionales-reserva">
+                        <h4>Servicios Adicionales</h4>
+                        <div class="servicios-lista-checklist" id="checklist-servicios">
+                            <!-- Dinámico -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lado Derecho del Modal: Detalles de la Reserva con Wizard de 4 pasos -->
+            <div class="modal-reserva-form">
+                <h2 id="titulo-paso-reserva"><i class="fa-regular fa-address-card"></i> Detalles de la Reserva</h2>
+                    <div class="linea-decorativa"></div>
+                    
+                    <!-- PASO 1: DATOS DE LA ESTADÍA -->
+                    <div id="reserva-paso-1">
+                        <form id="form-paso-1" onsubmit="irAPasoPago(event)">
+                            <!-- Datos del huésped (Solo lectura, tomados de la sesión activa) -->
+                            <div class="grupo-campo">
+                                <label>Nombre del Huésped</label>
+                                <input type="text" id="res-form-nombre" readonly class="campo-bloqueado">
+                            </div>
+                            <div class="grupo-campo">
+                                <label>Correo Electrónico</label>
+                                <input type="email" id="res-form-email" readonly class="campo-bloqueado">
+                            </div>
+                            <div class="grupo-campo">
+                                <label>Teléfono de Contacto</label>
+                                <input type="text" id="res-form-telefono" readonly class="campo-bloqueado">
+                            </div>
+
+                            <!-- Datos de Fechas y Personas -->
+                            <div class="grupo-campo-fila">
+                                <div class="grupo-campo">
+                                    <label for="res-form-llegada">Fecha de Llegada</label>
+                                    <input type="date" id="res-form-llegada" required onchange="calcularPrecioTotal()">
+                                </div>
+                                <div class="grupo-campo">
+                                    <label for="res-form-salida">Fecha de Salida</label>
+                                    <input type="date" id="res-form-salida" required onchange="calcularPrecioTotal()">
+                                </div>
+                            </div>
+
+                            <div class="grupo-campo-fila">
+                                <div class="grupo-campo">
+                                    <label for="res-form-adultos">Adultos</label>
+                                    <select id="res-form-adultos" onchange="validarCapacidadExcedida()">
+                                        <option value="1">1 Adulto</option>
+                                        <option value="2">2 Adultos</option>
+                                        <option value="3">3 Adultos</option>
+                                        <option value="4">4 Adultos</option>
+                                        <option value="5">5 Adultos</option>
+                                        <option value="6">6 Adultos</option>
+                                    </select>
+                                </div>
+                                <div class="grupo-campo">
+                                    <label for="res-form-ninos">Niños</label>
+                                    <select id="res-form-ninos" onchange="validarCapacidadExcedida()">
+                                        <option value="0">Sin niños</option>
+                                        <option value="1">1 Niño</option>
+                                        <option value="2">2 Niños</option>
+                                        <option value="3">3 Niños</option>
+                                        <option value="4">4 Niños</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="alerta-capacidad-reserva" class="alerta alerta-advertencia oculto">
+                                <p><i class="fa-solid fa-triangle-exclamation"></i> El número total de personas supera la capacidad máxima de esta habitación.</p>
+                            </div>
+
+                            <div class="reserva-resumen-costos">
+                                <div class="costo-item">
+                                    <span>Costo por Noche:</span>
+                                    <span id="res-calc-por-noche">$0.00</span>
+                                </div>
+                                <div class="costo-item">
+                                    <span>Noches de estadía:</span>
+                                    <span id="res-calc-noches">0 noches</span>
+                                </div>
+                                <div class="costo-item">
+                                    <span>Hospedaje Subtotal:</span>
+                                    <span id="res-calc-hospedaje-total">$0.00</span>
+                                </div>
+                                <div class="costo-item">
+                                    <span>Servicios Extras:</span>
+                                    <span id="res-calc-servicios-total">$0.00</span>
+                                </div>
+                                <div class="costo-total-destacado">
+                                    <span>Costo Total:</span>
+                                    <span id="res-calc-total-final">$0.00 MXN</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primario btn-bloque btn-largo" id="btn-confirmar-reserva" style="margin-top:15px;">
+                                Continuar al Pago <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- PASO 2: FORMULARIO DE PAGO INTERACTIVO -->
+                    <div id="reserva-paso-2" class="oculto">
+                        <!-- Tarjeta virtual interactiva -->
+                        <div class="tarjeta-credito-vista">
+                            <div class="tarjeta-franja-superior">
+                                <i class="fa-solid fa-microchip chip-icono"></i>
+                                <i class="fa-brands fa-cc-visa logo-tarjeta-tipo" id="tarjeta-logo-tipo"></i>
+                            </div>
+                            <div class="tarjeta-numero-vista" id="vista-tarjeta-numero">•••• •••• •••• ••••</div>
+                            <div class="tarjeta-inferior">
+                                <div>
+                                    <div class="tarjeta-etiqueta">Titular</div>
+                                    <div class="tarjeta-valor-vista" id="vista-tarjeta-nombre">NOMBRE COMPLETO</div>
+                                </div>
+                                <div>
+                                    <div class="tarjeta-etiqueta">Expira</div>
+                                    <div class="tarjeta-valor-vista" id="vista-tarjeta-exp">MM/AA</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inputs de la tarjeta -->
+                        <form id="form-paso-2" onsubmit="procesarPago(event)">
+                            <div class="grupo-campo">
+                                <label for="card-nombre">Nombre del Titular *</label>
+                                <input type="text" id="card-nombre" placeholder="CARLOS MARTINEZ" required oninput="actualizarTarjetaVirtual()">
+                            </div>
+                            
+                            <div class="grupo-campo">
+                                <label for="card-numero">Número de Tarjeta *</label>
+                                <div class="input-con-icono">
+                                    <input type="text" id="card-numero" placeholder="4152 3456 7890 1234" maxlength="19" required oninput="actualizarTarjetaVirtual()">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="grupo-campo-fila">
+                                <div class="grupo-campo">
+                                    <label for="card-exp">Fecha de Expiración *</label>
+                                    <input type="text" id="card-exp" placeholder="MM/AA" maxlength="5" required oninput="actualizarTarjetaVirtual()">
+                                </div>
+                                <div class="grupo-campo">
+                                    <label for="card-cvv">CVV *</label>
+                                    <input type="password" id="card-cvv" placeholder="123" maxlength="4" required>
+                                </div>
+                            </div>
+
+                            <div class="grupo-botones-fila">
+                                <button type="button" class="btn btn-usuario-panel" onclick="regresarAPaso1()">
+                                    <i class="fa-solid fa-arrow-left"></i> Atrás
+                                </button>
+                                <button type="submit" class="btn btn-verde btn-bloque">
+                                    <i class="fa-solid fa-receipt"></i> Pagar y Confirmar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- PASO 3: PANTALLA DE CARGA / PROCESANDO -->
+                    <div id="reserva-paso-3" class="oculto panel-procesando">
+                        <div class="cargando-spinner">
+                            <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--azul-oscuro); margin-bottom: 20px;"></i>
+                            <h3>Procesando Transacción Bancaria...</h3>
+                            <p>Por favor no cierres la ventana. Estamos validando los fondos de tu tarjeta de crédito/débito.</p>
+                        </div>
+                    </div>
+
+                    <!-- PASO 4: TICKET DE RESERVA FINAL -->
+                    <div id="reserva-paso-4" class="oculto">
+                        <div class="ticket-impresion" id="ticket-final-area">
+                            <div class="ticket-decoracion-diente"></div>
+                            <div class="ticket-cuerpo">
+                                <div class="ticket-encabezado">
+                                    <h3><i class="fa-solid fa-hotel"></i> Hotel Riviera</h3>
+                                    <p>Folio de Pago: <strong id="ticket-folio">#00000</strong></p>
+                                    <p class="fecha-ticket-actual" id="ticket-fecha-emision">10/06/2026</p>
+                                </div>
+                                <div class="ticket-linea-separacion"></div>
+                                <div class="ticket-info">
+                                    <p><span>Cliente:</span> <strong id="ticket-nombre-cliente">Carlos Martinez</strong></p>
+                                    <p><span>Email:</span> <span id="ticket-email-cliente">carlos@mail.com</span></p>
+                                    <p><span>Habitación:</span> <strong id="ticket-tipo-hab">Suite Deluxe</strong></p>
+                                    <p><span>N° Habitación:</span> <strong id="ticket-num-hab">201</strong></p>
+                                    <p><span>Llegada:</span> <strong id="ticket-checkin">2026-06-10</strong></p>
+                                    <p><span>Salida:</span> <strong id="ticket-checkout">2026-06-15</strong></p>
+                                    <p><span>Huéspedes:</span> <strong id="ticket-huespedes">2 Adultos</strong></p>
+                                </div>
+                                <div class="ticket-linea-separacion"></div>
+                                <div class="ticket-servicios-lista">
+                                    <h4>Servicios Extras:</h4>
+                                    <ul id="ticket-servicios-adicionales">
+                                        <!-- Dinámico -->
+                                    </ul>
+                                </div>
+                                <div class="ticket-linea-separacion"></div>
+                                <div class="ticket-total-seccion">
+                                    <p>Total Hospedaje: <span id="ticket-subtotal-hosp">$0.00 MXN</span></p>
+                                    <p>Total Servicios: <span id="ticket-subtotal-serv">$0.00 MXN</span></p>
+                                    <div class="ticket-monto-pagado">
+                                        <span>Total Pagado:</span>
+                                        <span id="ticket-total-pagado">$0.00 MXN</span>
+                                    </div>
+                                </div>
+                                <div class="ticket-linea-separacion"></div>
+                                <div class="ticket-codigo-barras">
+                                    <div class="codigo-barras-lineas">||||| | |||| ||| |||| | |||||| || |</div>
+                                    <div class="codigo-barras-texto">RIVIERA-RESERVA-ONLINE</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alerta alerta-info" style="margin-top: 20px;">
+                            <p><i class="fa-solid fa-envelope-circle-check"></i> ¡Listo! Hemos enviado una copia de este ticket a tu correo electrónico registrado.</p>
+                        </div>
+                        <div class="grupo-botones-fila" style="margin-top: 15px;">
+                            <button class="btn btn-usuario-panel" onclick="imprimirTicket()">
+                                <i class="fa-solid fa-print"></i> Imprimir Ticket
+                            </button>
+                            <button class="btn btn-primario" onclick="cerrarFlujoReservaCompleto()">
+                                Finalizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- D. MODAL DE MIS RESERVAS (PANEL DEL HUÉSPED) -->
+    <div class="capa-modal" id="modal-panel-usuario">
+        <div class="modal-tarjeta modal-mediano">
+            <button class="cerrar-modal-btn" onclick="cerrarModal('modal-panel-usuario')">&times;</button>
+            <div class="modal-cuerpo">
+                <h2 class="modal-titulo"><i class="fa-solid fa-suitcase"></i> Mi Panel - Historial de Reservas</h2>
+                <div class="linea-decorativa"></div>
+                
+                <div class="perfil-info-resumen">
+                    <p><i class="fa-regular fa-user"></i> Huésped: <strong id="perfil-nombre-completo">Carlos Martínez</strong></p>
+                    <p><i class="fa-regular fa-envelope"></i> Correo: <span id="perfil-email">carlos@mail.com</span></p>
+                </div>
+
+                <h3>Tus Reservas</h3>
+                <div class="lista-reservas-usuario" id="lista-reservas-contenedor">
+                    <!-- Se carga dinámicamente -->
+                    <div class="cargando-spinner">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Cargando tus reservas...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox de Galería de Fotos (Diseño Premium de dos columnas) -->
+    <div class="lightbox-overlay" id="lightbox-galeria" onclick="cerrarLightbox()">
+        <button class="lightbox-close-btn" onclick="cerrarLightbox()">&times;</button>
+        <div class="lightbox-tarjeta" onclick="event.stopPropagation()">
+            <div class="lightbox-imagen-lado">
+                <img id="lightbox-imagen" src="" alt="Ampliada">
+            </div>
+            <div class="lightbox-info-lado">
+                <h3 id="lightbox-titulo">Título de la Zona</h3>
+                <div class="linea-decorativa" style="margin: 15px 0 15px 0;"></div>
+                <p id="lightbox-descripcion">Descripción detallada e información relevante sobre este espacio especial de nuestro resort.</p>
+                <div class="lightbox-detalles-adicionales">
+                    <span id="lightbox-badge-1"><i class="fa-solid fa-clock"></i> Acceso disponible</span>
+                    <span id="lightbox-badge-2"><i class="fa-solid fa-bell"></i> Servicio exclusivo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts lógicos del cliente -->
+    <script src="cliente.js"></script>
+</body>
+</html>
