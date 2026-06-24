@@ -77,11 +77,33 @@ function actualizarMenuUsuario(sesionActiva) {
     const invitacionLoginTest = document.getElementById('formulario-testimonio-invitacion');
     
     if (sesionActiva && usuarioLogueado) {
+        let botonAdmin = '';
+        if (usuarioLogueado.es_admin) {
+            botonAdmin = `
+                <button class="btn btn-primario" onclick="abrirPanelAdmin()" style="background-color: var(--azul-oscuro); margin-right: 10px;">
+                    <i class="fa-solid fa-gauge-high"></i> Panel Administrador
+                </button>
+            `;
+        }
         // Si está logueado, mostramos su nombre y botón de cerrar sesión
+        let botonUsuario = '';
+        if (usuarioLogueado.es_admin) {
+            botonUsuario = `
+                <span class="btn-usuario-estatico" style="color: white; margin-right: 15px; display: inline-flex; align-items: center; gap: 8px; font-weight: 500;">
+                    <i class="fa-solid fa-circle-user"></i> Hola, ${usuarioLogueado.nombre}
+                </span>
+            `;
+        } else {
+            botonUsuario = `
+                <button class="btn btn-usuario-panel" onclick="abrirPanelUsuario()">
+                    <i class="fa-solid fa-circle-user"></i> Hola, ${usuarioLogueado.nombre}
+                </button>
+            `;
+        }
+
         contenedorUsuario.innerHTML = `
-            <button class="btn btn-usuario-panel" onclick="abrirPanelUsuario()">
-                <i class="fa-solid fa-circle-user"></i> Hola, ${usuarioLogueado.nombre}
-            </button>
+            ${botonAdmin}
+            ${botonUsuario}
             <button class="btn btn-rojo" onclick="cerrarSesion()">
                 <i class="fa-solid fa-right-from-bracket"></i> Salir
             </button>
@@ -162,6 +184,12 @@ async function ejecutarRegistro(event) {
     const email = document.getElementById('reg-email').value.trim().toLowerCase();
     const contrasena = document.getElementById('reg-password').value;
     const telefono = document.getElementById('reg-telefono').value;
+    
+    const regexTelefono = /^\+[0-9]{12}$/;
+    if (telefono && !regexTelefono.test(telefono)) {
+        alert('El número de teléfono debe iniciar con "+" y contener exactamente 12 números (ej. +521234567890).');
+        return;
+    }
     
     try {
         const respuesta = await fetch('/api/registrar', {
@@ -298,18 +326,27 @@ async function cargarHabitaciones(llegada = '', salida = '', totalPersonas = 0) 
             
             const foto = fotosMapeo[hab.Nombre_Tipo] || 'imagenes/doble.png';
             
-            // Si la consulta vino con fechas, hab tendrá el conteo de físicas libres.
-            // Si no, mostramos capacidad genérica.
-            const totalDispoTexto = hab.Habitaciones_Disponibles !== undefined 
-                ? `<span class="badge-dispo"><i class="fa-solid fa-check"></i> ${hab.Habitaciones_Disponibles} disponibles</span>`
-                : '';
-                
+            // Ya no mostramos el badge de "X disponibles" porque se ve feo.
+            // Pero usamos el valor para saber si hay disponibilidad física de habitaciones.
+            let botonHtml = `
+                <button class="btn btn-primario" onclick="intentarReservar(${hab.ID_Tipo_Habitacion})">
+                    <i class="fa-regular fa-calendar-check"></i> Reservar Habitación
+                </button>
+            `;
+            
+            if (hab.Habitaciones_Disponibles !== undefined && parseInt(hab.Habitaciones_Disponibles) === 0) {
+                botonHtml = `
+                    <button class="btn" style="background-color: #e0e0e0; color: #888; border: 1px solid #ccc; cursor: not-allowed; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;" disabled>
+                        <i class="fa-solid fa-ban"></i> Sin disponibilidad
+                    </button>
+                `;
+            }
+                 
             const precioMxn = parseFloat(hab.Precio_Noche) * TIPO_CAMBIO;
             const tarjetaHtml = `
                 <div class="tarjeta-habitacion">
                     <div class="habitacion-img-contenedor">
                         <img src="${foto}" alt="${hab.Nombre_Tipo}">
-                        <div class="precio-tag">$${precioMxn.toLocaleString('es-MX')} <span>MXN / Noche</span></div>
                     </div>
                     <div class="habitacion-detalles">
                         <h3>${hab.Nombre_Tipo}</h3>
@@ -317,12 +354,9 @@ async function cargarHabitaciones(llegada = '', salida = '', totalPersonas = 0) 
                         
                         <div class="habitacion-info-adicional">
                             <span><i class="fa-solid fa-users"></i> Capacidad Máx: ${hab.Capacidad_Maxima} personas</span>
-                            ${totalDispoTexto}
                         </div>
                         
-                        <button class="btn btn-primario" onclick="intentarReservar(${hab.ID_Tipo_Habitacion})">
-                            <i class="fa-regular fa-calendar-check"></i> Reservar Habitación
-                        </button>
+                        ${botonHtml}
                     </div>
                 </div>
             `;
@@ -382,7 +416,6 @@ async function cargarServicios() {
                     </div>
                     <h3>${serv.Nombre_Servicio}</h3>
                     <p>${serv.Descripcion_Corta}</p>
-                    <span class="servicio-precio">${precioTexto}</span>
                 </div>
             `;
             contenedor.innerHTML += html;
@@ -1253,5 +1286,644 @@ function cerrarLightbox() {
         if (modalesActivos.length === 0) {
             document.body.style.overflow = 'auto';
         }
+    }
+}
+
+
+// =====================================================================
+// 9. FUNCIONALIDAD DEL PANEL DE ADMINISTRACIÓN
+// =====================================================================
+
+// Abre el modal de administración y carga las habitaciones por defecto
+function abrirPanelAdmin() {
+    abrirModal('modal-panel-admin');
+    
+    // Cargar por defecto la primera pestaña
+    const primerTab = document.querySelector('.admin-tabs .tab-btn');
+    if (primerTab) {
+        cambiarTabAdmin(primerTab);
+    }
+}
+
+// Controla el cambio de pestañas (Tabs) en el panel de administración
+function cambiarTabAdmin(btnElement) {
+    // 1. Quitar clase activo de todos los botones de tabs
+    const botones = document.querySelectorAll('.admin-tabs .tab-btn');
+    botones.forEach(btn => btn.classList.remove('activo'));
+    
+    // 2. Ocultar todos los contenedores de contenido de tab
+    const contenidos = document.querySelectorAll('.admin-tab-contenido');
+    contenidos.forEach(cont => cont.classList.add('oculto'));
+    
+    // 3. Activar el botón clicado y mostrar su respectivo contenedor
+    btnElement.classList.add('activo');
+    const tabId = btnElement.getAttribute('data-tab');
+    const contenedorDestino = document.getElementById(tabId);
+    if (contenedorDestino) {
+        contenedorDestino.classList.remove('oculto');
+    }
+    
+    // 4. Cargar los datos correspondientes al tab seleccionado
+    if (tabId === 'admin-tab-habitaciones') {
+        adminCargarHabitaciones();
+    } else if (tabId === 'admin-tab-precios') {
+        adminCargarPrecios();
+    } else if (tabId === 'admin-tab-reservas') {
+        adminCargarReservas();
+    } else if (tabId === 'admin-tab-servicios') {
+        adminCargarServicios();
+    } else if (tabId === 'admin-tab-testimonios') {
+        adminCargarTestimonios();
+    }
+}
+
+// Muestra/Oculta el formulario de agregar una nueva habitación
+function toggleFormularioAgregarHabitacion() {
+    const formulario = document.getElementById('form-agregar-habitacion');
+    if (formulario) {
+        formulario.classList.toggle('oculto');
+        if (!formulario.classList.contains('oculto')) {
+            document.getElementById('formulario-nueva-hab').reset();
+            adminCargarTiposHabitacionSelect();
+        }
+    }
+}
+
+// Carga las categorías en el select del formulario "Nueva Habitación"
+async function adminCargarTiposHabitacionSelect() {
+    const select = document.getElementById('new-hab-tipo');
+    if (!select) return;
+    
+    try {
+        const respuesta = await fetch('/api/habitaciones-disponibles');
+        const tipos = await respuesta.json();
+        
+        if (respuesta.ok) {
+            select.innerHTML = '<option value="" disabled selected>Selecciona una categoría...</option>';
+            tipos.forEach(tipo => {
+                select.innerHTML += `<option value="${tipo.ID_Tipo_Habitacion}">${tipo.Nombre_Tipo}</option>`;
+            });
+        }
+    } catch (err) {
+        console.error('Error al cargar tipos de habitaciones para el select:', err);
+    }
+}
+
+// Carga el listado de todas las habitaciones (Pestaña 1)
+async function adminCargarHabitaciones() {
+    const listado = document.getElementById('admin-habitaciones-listado');
+    if (!listado) return;
+    
+    listado.innerHTML = `
+        <div class="cargando-spinner">
+            <i class="fa-solid fa-spinner fa-spin"></i> Cargando habitaciones...
+        </div>
+    `;
+    
+    try {
+        const respuesta = await fetch('/api/admin/habitaciones');
+        const habitaciones = await respuesta.json();
+        
+        if (!respuesta.ok) {
+            listado.innerHTML = `<p class="alerta alerta-advertencia">No se pudieron cargar las habitaciones.</p>`;
+            return;
+        }
+        
+        listado.innerHTML = '';
+        if (habitaciones.length === 0) {
+            listado.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:20px; color:#777;">No hay habitaciones físicas registradas.</p>';
+            return;
+        }
+        
+        habitaciones.forEach(hab => {
+            let cardEstadoClase = 'hab-disponible';
+            if (hab.Estado === 'Ocupada') cardEstadoClase = 'hab-ocupada';
+            if (hab.Estado === 'Mantenimiento') cardEstadoClase = 'hab-mantenimiento';
+            
+            const precioMxn = parseFloat(hab.Precio_Noche) * TIPO_CAMBIO;
+            
+            const card = `
+                <div class="admin-hab-card ${cardEstadoClase}">
+                    <div class="hab-card-header">
+                        <h4>Habitación ${hab.Numero_Habitacion}</h4>
+                        <span class="hab-badge-piso">Piso ${hab.Piso}</span>
+                    </div>
+                    <div class="hab-card-body">
+                        <p class="hab-tipo-nom">${hab.Nombre_Tipo}</p>
+                        <p class="hab-capacidad"><i class="fa-solid fa-users"></i> Capacidad: ${hab.Capacidad_Maxima} personas</p>
+                        <p class="hab-precio-local">Precio: $${precioMxn.toLocaleString('es-MX')} MXN</p>
+                    </div>
+                    <div class="hab-card-actions">
+                        <label for="cambiar-estado-${hab.ID_Habitacion}">Estado:</label>
+                        <select id="cambiar-estado-${hab.ID_Habitacion}" onchange="cambiarEstadoHabitacion(${hab.ID_Habitacion}, this.value)">
+                            <option value="Disponible" ${hab.Estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                            <option value="Ocupada" ${hab.Estado === 'Ocupada' ? 'selected' : ''}>Ocupada</option>
+                            <option value="Mantenimiento" ${hab.Estado === 'Mantenimiento' ? 'selected' : ''}>Mantenimiento/Limpieza</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            listado.innerHTML += card;
+        });
+    } catch (err) {
+        console.error('Error al cargar habitaciones del admin:', err);
+        listado.innerHTML = `<p class="alerta alerta-advertencia">Falla de conexión.</p>`;
+    }
+}
+
+// Envía la petición para guardar una nueva habitación
+async function ejecutarAgregarHabitacion(event) {
+    event.preventDefault();
+    
+    const id_tipo_habitacion = parseInt(document.getElementById('new-hab-tipo').value);
+    const numero_habitacion = document.getElementById('new-hab-numero').value.trim();
+    const piso = parseInt(document.getElementById('new-hab-piso').value);
+    const estado = document.getElementById('new-hab-estado').value;
+    
+    if (!id_tipo_habitacion || !numero_habitacion || !piso) {
+        alert('Por favor llene todos los campos obligatorios.');
+        return;
+    }
+    
+    try {
+        const respuesta = await fetch('/api/admin/habitaciones/agregar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_tipo_habitacion, numero_habitacion, piso, estado })
+        });
+        
+        const datos = await respuesta.json();
+        if (!respuesta.ok) {
+            alert(datos.error || 'Ocurrió un error al guardar la habitación.');
+            return;
+        }
+        
+        alert(datos.mensaje || 'Habitación registrada correctamente.');
+        toggleFormularioAgregarHabitacion();
+        adminCargarHabitaciones();
+        
+    } catch (err) {
+        console.error('Error al agregar habitación:', err);
+        alert('Falla al conectar con el servidor.');
+    }
+}
+
+// Cambia el estado físico de una habitación (Disponible, Ocupada, Mantenimiento)
+async function cambiarEstadoHabitacion(idHabitacion, nuevoEstado) {
+    try {
+        const respuesta = await fetch('/api/admin/habitaciones/estado', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_habitacion: idHabitacion, estado: nuevoEstado })
+        });
+        
+        const datos = await respuesta.json();
+        if (!respuesta.ok) {
+            alert(datos.error || 'No se pudo actualizar el estado de la habitación.');
+            return;
+        }
+        
+        // Recargar habitaciones visualmente
+        adminCargarHabitaciones();
+        
+    } catch (err) {
+        console.error('Error al cambiar estado de habitación:', err);
+        alert('Falla de conexión al actualizar estado.');
+    }
+}
+
+// Carga las categorías y precios (Pestaña 2)
+async function adminCargarPrecios() {
+    const listado = document.getElementById('admin-precios-listado');
+    if (!listado) return;
+    
+    listado.innerHTML = `
+        <tr>
+            <td colspan="5" class="cargando-spinner">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando categorías...
+            </td>
+        </tr>
+    `;
+    
+    try {
+        const respuesta = await fetch('/api/habitaciones-disponibles');
+        const tipos = await respuesta.json();
+        
+        if (!respuesta.ok) {
+            listado.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#d32f2f;">Error al cargar precios de categorías.</td></tr>`;
+            return;
+        }
+        
+        listado.innerHTML = '';
+        tipos.forEach(tipo => {
+            const precioUsd = parseFloat(tipo.Precio_Noche);
+            const precioMxn = precioUsd * TIPO_CAMBIO;
+            
+            const fila = `
+                <tr>
+                    <td><strong>${tipo.Nombre_Tipo}</strong><br><small style="color:#666;">${tipo.Descripcion || ''}</small></td>
+                    <td style="text-align:center;">${tipo.Capacidad_Maxima} personas</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <span>$</span>
+                            <input type="number" id="precio-tipo-${tipo.ID_Tipo_Habitacion}" value="${precioUsd.toFixed(2)}" step="10" min="1" style="width: 100px; padding: 6px; border: 1px solid #ccc; border-radius: 4px;" oninput="actualizarFilaPrecioMxn(${tipo.ID_Tipo_Habitacion}, this.value)">
+                        </div>
+                    </td>
+                    <td>
+                        <strong id="mxn-tipo-${tipo.ID_Tipo_Habitacion}">$${precioMxn.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> MXN
+                    </td>
+                    <td>
+                        <button class="btn btn-verde" style="padding: 6px 12px; font-size: 0.8rem;" onclick="guardarPrecioTipo(${tipo.ID_Tipo_Habitacion})">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar
+                        </button>
+                    </td>
+                </tr>
+            `;
+            listado.innerHTML += fila;
+        });
+    } catch (err) {
+        console.error('Error al cargar precios:', err);
+    }
+}
+
+// Función auxiliar en cliente para actualizar el total MXN en tiempo real al editar el precio en USD
+function actualizarFilaPrecioMxn(idTipo, valorUsd) {
+    const strongMxn = document.getElementById(`mxn-tipo-${idTipo}`);
+    if (strongMxn) {
+        const usd = parseFloat(valorUsd) || 0;
+        const mxn = usd * TIPO_CAMBIO;
+        strongMxn.textContent = `$${mxn.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+}
+
+// Guarda la modificación del precio por noche de una categoría
+async function guardarPrecioTipo(idTipoHabitacion) {
+    const input = document.getElementById(`precio-tipo-${idTipoHabitacion}`);
+    if (!input) return;
+    
+    const precio_noche = parseFloat(input.value);
+    if (isNaN(precio_noche) || precio_noche <= 0) {
+        alert('Por favor ingresa un precio válido mayor a 0.');
+        return;
+    }
+    
+    try {
+        const respuesta = await fetch('/api/admin/habitaciones/precio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_tipo_habitacion: idTipoHabitacion, precio_noche })
+        });
+        
+        const datos = await respuesta.json();
+        if (!respuesta.ok) {
+            alert(datos.error || 'No se pudo guardar el precio.');
+            return;
+        }
+        
+        alert(datos.mensaje || 'Precio actualizado correctamente.');
+        adminCargarPrecios();
+        
+    } catch (err) {
+        console.error('Error al guardar precio de tipo:', err);
+        alert('Falla al conectar con el servidor.');
+    }
+}
+
+// Carga las reservas completas del hotel (Pestaña 3)
+async function adminCargarReservas() {
+    const listado = document.getElementById('admin-reservas-listado');
+    if (!listado) return;
+    
+    listado.innerHTML = `
+        <tr>
+            <td colspan="7" class="cargando-spinner">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando reservaciones...
+            </td>
+        </tr>
+    `;
+    
+    try {
+        const respuesta = await fetch('/api/admin/reservas');
+        const reservas = await respuesta.json();
+        
+        if (!respuesta.ok) {
+            listado.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#d32f2f;">Error al consultar reservaciones.</td></tr>`;
+            return;
+        }
+        
+        listado.innerHTML = '';
+        if (reservas.length === 0) {
+            listado.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#777;">No hay reservaciones registradas en el sistema.</td></tr>';
+            return;
+        }
+        
+        reservas.forEach(res => {
+            // Badges del estado
+            let badgeClase = 'badge-pendiente';
+            if (res.Estado_Reserva === 'Confirmada') badgeClase = 'badge-confirmada';
+            if (res.Estado_Reserva === 'Cancelada') badgeClase = 'badge-cancelada';
+            if (res.Estado_Reserva === 'Finalizada') badgeClase = 'badge-finalizada';
+            
+            const totalMxn = parseFloat(res.Costo_Total) * TIPO_CAMBIO;
+            
+            const fila = `
+                <tr>
+                    <td><strong>#${res.ID_Reserva}</strong><br><small style="color:#777;">Creación:<br>${res.Fecha_Creacion.split(' ')[0]}</small></td>
+                    <td>
+                        <strong>${res.Nombre} ${res.Apellido}</strong><br>
+                        <small style="color:#555;"><i class="fa-regular fa-envelope"></i> ${res.Email}</small><br>
+                        <small style="color:#555;"><i class="fa-solid fa-phone"></i> ${res.Telefono || 'S/T'}</small>
+                    </td>
+                    <td>
+                        <strong>Hab. ${res.Numero_Habitacion}</strong><br>
+                        <span style="font-size:0.8rem;color:#666;">${res.Nombre_Tipo}</span>
+                    </td>
+                    <td>
+                        <small>Entrada: <strong>${res.Fecha_Llegada}</strong></small><br>
+                        <small>Salida: <strong>${res.Fecha_Salida}</strong></small>
+                    </td>
+                    <td>
+                        <span class="reserva-estado-badge ${badgeClase}" style="font-size: 0.8rem; padding: 4px 8px;">${res.Estado_Reserva}</span>
+                    </td>
+                    <td>
+                        <strong>$${totalMxn.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> MXN
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            <select style="padding:4px; font-size:0.8rem; border-radius:4px; border:1px solid #ccc;" onchange="cambiarEstadoReservaAdmin(${res.ID_Reserva}, this.value)">
+                                <option value="Confirmada" ${res.Estado_Reserva === 'Confirmada' ? 'selected' : ''}>Confirmada</option>
+                                <option value="Pendiente" ${res.Estado_Reserva === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="Cancelada" ${res.Estado_Reserva === 'Cancelada' ? 'selected' : ''}>Cancelada</option>
+                                <option value="Finalizada" ${res.Estado_Reserva === 'Finalizada' ? 'selected' : ''}>Finalizada</option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            listado.innerHTML += fila;
+        });
+    } catch (err) {
+        console.error('Error al cargar reservas de admin:', err);
+    }
+}
+
+// Envía la petición para cambiar el estado de una reserva desde la vista del admin
+async function cambiarEstadoReservaAdmin(idReserva, nuevoEstado) {
+    if (nuevoEstado === 'Cancelada' && !confirm('¿Realmente deseas marcar esta reserva como cancelada? Se enviará un correo de confirmación al huésped.')) {
+        adminCargarReservas(); // recargar para revertir select
+        return;
+    }
+    
+    try {
+        const respuesta = await fetch('/api/admin/reservas/estado', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_reserva: idReserva, estado: nuevoEstado })
+        });
+        
+        const datos = await respuesta.json();
+        if (!respuesta.ok) {
+            alert(datos.error || 'No se pudo actualizar el estado de la reserva.');
+            return;
+        }
+        
+        adminCargarReservas();
+    } catch (err) {
+        console.error('Error al actualizar reserva:', err);
+        alert('Falla al conectar con el servidor.');
+    }
+}
+
+// Carga el catálogo de servicios (Pestaña 4)
+async function adminCargarServicios() {
+    const listado = document.getElementById('admin-servicios-listado');
+    if (!listado) return;
+    
+    listado.innerHTML = `
+        <tr>
+            <td colspan="6" class="cargando-spinner">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando catálogo de servicios...
+            </td>
+        </tr>
+    `;
+    
+    try {
+        const respuesta = await fetch('/api/admin/servicios');
+        const servicios = await respuesta.json();
+        
+        if (!respuesta.ok) {
+            listado.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#d32f2f;">Error al cargar servicios.</td></tr>`;
+            return;
+        }
+        
+        listado.innerHTML = '';
+        servicios.forEach(serv => {
+            const precioUsd = parseFloat(serv.Precio);
+            const precioMxn = precioUsd * TIPO_CAMBIO;
+            
+            const fila = `
+                <tr>
+                    <td><strong>${serv.Nombre_Servicio}</strong></td>
+                    <td style="font-size:0.85rem; color:#666;">${serv.Descripcion_Corta || ''}</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <span>$</span>
+                            <input type="number" id="precio-serv-${serv.ID_Servicio}" value="${precioUsd.toFixed(2)}" min="0" step="5" style="width: 80px; padding: 6px; border: 1px solid #ccc; border-radius: 4px;" oninput="actualizarServPrecioMxn(${serv.ID_Servicio}, this.value)">
+                        </div>
+                    </td>
+                    <td>
+                        <strong id="mxn-serv-${serv.ID_Servicio}">$${precioMxn.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> MXN
+                    </td>
+                    <td style="text-align:center;">
+                        <input type="checkbox" id="dispo-serv-${serv.ID_Servicio}" ${serv.Disponible ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
+                    </td>
+                    <td>
+                        <button class="btn btn-verde" style="padding: 6px 12px; font-size: 0.8rem;" onclick="guardarServicioAdmin(${serv.ID_Servicio})">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar
+                        </button>
+                    </td>
+                </tr>
+            `;
+            listado.innerHTML += fila;
+        });
+    } catch (err) {
+        console.error('Error al cargar servicios:', err);
+    }
+}
+
+// Función auxiliar en cliente para actualizar el precio del servicio en MXN en tiempo real
+function actualizarServPrecioMxn(idServ, valorUsd) {
+    const strongMxn = document.getElementById(`mxn-serv-${idServ}`);
+    if (strongMxn) {
+        const usd = parseFloat(valorUsd) || 0;
+        const mxn = usd * TIPO_CAMBIO;
+        strongMxn.textContent = `$${mxn.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+}
+
+// Guarda las modificaciones de un servicio (precio y disponible)
+async function guardarServicioAdmin(idServicio) {
+    const inputPrecio = document.getElementById(`precio-serv-${idServicio}`);
+    const inputDispo = document.getElementById(`dispo-serv-${idServicio}`);
+    
+    if (!inputPrecio || !inputDispo) return;
+    
+    const precio = parseFloat(inputPrecio.value);
+    const disponible = inputDispo.checked;
+    
+    if (isNaN(precio) || precio < 0) {
+        alert('Por favor ingresa un precio de servicio válido.');
+        return;
+    }
+    
+    try {
+        const respuesta = await fetch('/api/admin/servicios/actualizar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_servicio: idServicio, precio, disponible })
+        });
+        
+        const datos = await respuesta.json();
+        if (!respuesta.ok) {
+            alert(datos.error || 'No se pudo guardar el servicio.');
+            return;
+        }
+        
+        alert(datos.mensaje || 'Servicio actualizado correctamente.');
+        adminCargarServicios();
+        
+    } catch (err) {
+        console.error('Error al guardar servicio:', err);
+        alert('Falla al conectar con el servidor.');
+    }
+}
+
+// Carga todos los testimonios no eliminados en el panel de administración
+async function adminCargarTestimonios() {
+    const listado = document.getElementById('admin-testimonios-listado');
+    if (!listado) return;
+    
+    listado.innerHTML = `
+        <tr>
+            <td colspan="5" class="cargando-spinner">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando testimonios...
+            </td>
+        </tr>
+    `;
+    
+    try {
+        const respuesta = await fetch('/api/admin/testimonios');
+        const testimonios = await respuesta.json();
+        
+        if (!respuesta.ok) {
+            listado.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#d32f2f;">Error al cargar testimonios.</td></tr>`;
+            return;
+        }
+        
+        listado.innerHTML = '';
+        if (testimonios.length === 0) {
+            listado.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#777;">No hay comentarios registrados.</td></tr>';
+            return;
+        }
+        
+        testimonios.forEach(t => {
+            const fila = `
+                <tr>
+                    <td>
+                        <strong>${t.Nombre} ${t.Apellido}</strong><br>
+                        <small style="color:#666;">${t.Email}</small>
+                    </td>
+                    <td>
+                        <span style="color:#ffc107;">${'★'.repeat(t.Calificacion_Estrellas)}${'☆'.repeat(5 - t.Calificacion_Estrellas)}</span>
+                    </td>
+                    <td>
+                        <textarea id="comentario-edit-${t.ID_Testimonio}" style="width:100%; min-height:60px; padding:6px; border:1px solid #ccc; border-radius:4px; font-family:inherit; font-size:0.9rem; resize:vertical;">${t.Comentario}</textarea>
+                    </td>
+                    <td style="text-align:center;">
+                        <input type="checkbox" id="aprobado-edit-${t.ID_Testimonio}" ${t.Aprobado ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <button class="btn btn-verde" style="padding: 6px 12px; font-size: 0.8rem;" onclick="guardarTestimonioAdmin(${t.ID_Testimonio})">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar
+                            </button>
+                            <button class="btn btn-rojo" style="padding: 6px 12px; font-size: 0.8rem;" onclick="eliminarTestimonioAdmin(${t.ID_Testimonio})">
+                                <i class="fa-solid fa-eye-slash"></i> Ocultar/Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            listado.innerHTML += fila;
+        });
+    } catch (err) {
+        console.error('Error al cargar testimonios para admin:', err);
+    }
+}
+
+// Guarda la modificación de comentario y aprobación de un testimonio
+async function guardarTestimonioAdmin(idTestimonio) {
+    const textarea = document.getElementById(`comentario-edit-${idTestimonio}`);
+    const checkbox = document.getElementById(`aprobado-edit-${idTestimonio}`);
+    
+    if (!textarea || !checkbox) return;
+    
+    const comentario = textarea.value.trim();
+    const aprobado = checkbox.checked;
+    
+    if (!comentario) {
+        alert('El comentario no puede estar vacío.');
+        return;
+    }
+    
+    try {
+        const respuesta = await fetch('/api/admin/testimonios/actualizar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_testimonio: idTestimonio, comentario, aprobado })
+        });
+        
+        const datos = await respuesta.json();
+        if (!respuesta.ok) {
+            alert(datos.error || 'No se pudo actualizar el testimonio.');
+            return;
+        }
+        
+        alert(datos.mensaje || 'Testimonio actualizado correctamente.');
+        adminCargarTestimonios();
+        cargarTestimonios(); // Recargar el slider público
+        
+    } catch (err) {
+        console.error('Error al actualizar testimonio:', err);
+        alert('Falla al conectar con el servidor.');
+    }
+}
+
+// Soft-delete de testimonio
+async function eliminarTestimonioAdmin(idTestimonio) {
+    if (!confirm('¿Realmente deseas ocultar este testimonio del sitio web? El comentario no se borrará de la base de datos (según la política corporativa de movimientos), pero ya no será visible en las listas públicas ni de administración.')) {
+        return;
+    }
+    
+    try {
+        const respuesta = await fetch('/api/admin/testimonios/eliminar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_testimonio: idTestimonio })
+        });
+        
+        const datos = await respuesta.json();
+        if (!respuesta.ok) {
+            alert(datos.error || 'No se pudo ocultar el testimonio.');
+            return;
+        }
+        
+        alert(datos.mensaje || 'El testimonio ha sido ocultado exitosamente.');
+        adminCargarTestimonios();
+        cargarTestimonios(); // Recargar el slider público
+        
+    } catch (err) {
+        console.error('Error al ocultar testimonio:', err);
+        alert('Falla al conectar con el servidor.');
     }
 }

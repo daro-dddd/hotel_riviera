@@ -1803,3 +1803,307 @@ h1, h2, h3, h4 {
         padding: 20px;
     }
 }
+
+/* =====================================================================
+   12. ESTILOS DEL PANEL DE ADMINISTRACIÓN
+   ===================================================================== */
+
+/* Tamaño personalizado para el modal grande del administrador */
+.modal-grande {
+    width: 90% !important;
+    max-width: 1200px !important;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Barra de Pestañas (Tabs) */
+.admin-tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 2px solid var(--azul-celeste);
+    margin-bottom: 25px;
+    padding-bottom: 5px;
+    overflow-x: auto;
+}
+
+.admin-tabs .tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gris-suave);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transicion-suave);
+    border-radius: 6px 6px 0 0;
+    white-space: nowrap;
+}
+
+.admin-tabs .tab-btn:hover {
+    color: var(--azul-oscuro);
+    background-color: rgba(0, 48, 100, 0.04);
+}
+
+.admin-tabs .tab-btn.activo {
+    color: var(--azul-oscuro);
+    border-bottom: 3px solid var(--azul-oscuro);
+    background-color: var(--azul-celeste);
+}
+
+/* Contenido de las pestañas */
+.admin-tab-contenido {
+    animation: fadeIn 0.3s ease;
+}
+
+.admin-tab-contenido.oculto {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Acciones en secciones del admin */
+.admin-seccion-acciones {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 12px;
+}
+
+.admin-seccion-acciones h3 {
+    font-size: 1.3rem;
+    margin: 0;
+}
+
+/* Formulario Admin Tarjeta */
+.formulario-admin-tarjeta {
+    background-color: var(--azul-celeste);
+    border: 1px solid rgba(0, 48, 100, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.formulario-admin-tarjeta h4 {
+    margin-bottom: 15px;
+    color: var(--azul-oscuro);
+    font-size: 1.1rem;
+}
+
+/* Grid de Habitaciones del Administrador */
+.admin-habitaciones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.admin-hab-card {
+    background-color: var(--blanco);
+    border-radius: 8px;
+    border-top: 5px solid #ccc;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e0e0e0;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: var(--transicion-suave);
+}
+
+.admin-hab-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Colores según estado de habitación */
+.admin-hab-card.hab-disponible {
+    border-top: 5px solid var(--verde-confirmar);
+    border-left: 1px solid rgba(67, 160, 71, 0.15);
+    border-right: 1px solid rgba(67, 160, 71, 0.15);
+    border-bottom: 1px solid rgba(67, 160, 71, 0.15);
+}
+
+.admin-hab-card.hab-ocupada {
+    border-top: 5px solid var(--rojo-cancelar);
+    border-left: 1px solid rgba(211, 47, 47, 0.15);
+    border-right: 1px solid rgba(211, 47, 47, 0.15);
+    border-bottom: 1px solid rgba(211, 47, 47, 0.15);
+}
+
+.admin-hab-card.hab-mantenimiento {
+    border-top: 5px solid #ff9800; /* Naranja para limpieza/mantenimiento */
+    border-left: 1px solid rgba(255, 152, 0, 0.15);
+    border-right: 1px solid rgba(255, 152, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 152, 0, 0.15);
+}
+
+.hab-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.hab-card-header h4 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.hab-badge-piso {
+    background-color: var(--azul-celeste);
+    color: var(--azul-oscuro);
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+.hab-card-body {
+    flex-grow: 1;
+    font-size: 0.88rem;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hab-tipo-nom {
+    font-weight: 700;
+    color: var(--azul-profundo);
+}
+
+.hab-capacidad, .hab-precio-local {
+    color: var(--gris-suave);
+}
+
+.hab-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px dashed #e0e0e0;
+    padding-top: 10px;
+    font-size: 0.85rem;
+}
+
+.hab-card-actions select {
+    padding: 5px;
+    font-size: 0.82rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    outline: none;
+    cursor: pointer;
+    background-color: #fcfdfe;
+}
+
+/* Tablas de Administración */
+.tabla-contenedor {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.tabla-admin {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    text-align: left;
+}
+
+.tabla-admin th {
+    background-color: var(--azul-oscuro);
+    color: var(--blanco);
+    padding: 12px 15px;
+    font-weight: 600;
+}
+
+.tabla-admin td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tabla-admin tbody tr:hover {
+    background-color: #fafafa;
+}
+
+/* Badges de estado estilizados para administración */
+.badge-pendiente {
+    background-color: #fff8e1;
+    color: #b78103;
+    border: 1px solid #ffe082;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.badge-confirmada {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.badge-cancelada {
+    background-color: #ffeedd;
+    color: var(--rojo-cancelar);
+    border: 1px solid #ffcdd2;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.badge-finalizada {
+    background-color: #eceff1;
+    color: #455a64;
+    border: 1px solid #cfd8dc;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Ajustes responsivos para tablets y pantallas medianas */
+@media (max-width: 992px) {
+    .modal-grande {
+        width: 95% !important;
+    }
+}
+
+.badge-dispo {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Badges estáticos y campos de edición de testimonios */
+.btn-usuario-estatico {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--blanco);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: default;
+    user-select: none;
+}
+
+#admin-tab-testimonios textarea:focus {
+    border-color: var(--azul-brillante);
+    background-color: var(--blanco);
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    outline: none;
+}
+

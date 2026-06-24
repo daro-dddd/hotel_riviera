@@ -31,6 +31,7 @@ CREATE TABLE Huespedes (
     Contrasena VARCHAR(255) NOT NULL, -- Columna añadida para manejar el login de la web
     Telefono VARCHAR(20) UNIQUE,
     URL_Foto_Perfil VARCHAR(255) NULL,
+    Es_Administrador BOOLEAN DEFAULT FALSE,
     Fecha_Registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_email CHECK (Email LIKE '%@%.%')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -67,6 +68,7 @@ CREATE TABLE Reservas (
     Numero_Adultos INT NOT NULL CHECK (Numero_Adultos > 0),
     Numero_Ninos INT DEFAULT 0 CHECK (Numero_Ninos >= 0),
     Estado_Reserva ENUM('Pendiente', 'Confirmada', 'Cancelada', 'Finalizada') DEFAULT 'Pendiente',
+    Precio_Noche_Reservado DECIMAL(10,2) NULL,
     Fecha_Creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ID_Huesped) REFERENCES Huespedes(ID_Huesped),
     FOREIGN KEY (ID_Habitacion) REFERENCES Habitaciones(ID_Habitacion)
@@ -92,6 +94,7 @@ CREATE TABLE Testimonios (
     Calificacion_Estrellas INT NOT NULL CHECK (Calificacion_Estrellas BETWEEN 1 AND 5),
     Fecha_Publicacion DATE DEFAULT (CURRENT_DATE),
     Aprobado BOOLEAN DEFAULT FALSE,
+    Eliminado BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (ID_Huesped) REFERENCES Huespedes(ID_Huesped)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -124,9 +127,10 @@ CREATE TABLE Reservas_Servicios (
 
 -- Huesped de prueba (contraseña original: contrasena123 y secreto456, ahora almacenadas como hashes seguros)
 -- NOTA: Las contraseñas se almacenan como hashes generados por werkzeug.security para garantizar la seguridad.
-INSERT INTO Huespedes (Nombre, Apellido, Email, Contrasena, Telefono) VALUES
-('Carlos', 'Martinez', 'carlos.martinez@mail.com', 'scrypt:32768:8:1$qWuztHvEKYpIQvWS$7b3f818ceab7ae04849371641f1d76cffdc3b7bf9d19f8f28453d902308639bbd9941026ddc9212963752c0a6a05809babb3c82f532d331f089c87ecd3290707', '+52 555-123-4567'),
-('Laura', 'Gomez', 'laura.gomez@mail.com', 'scrypt:32768:8:1$U3QT9SvRGFWJKJzG$fe2c1eda339c8e7120cfc0530126c6f4237216dfe83603d35770d29e9244a7ac4393283bb90c4b92aab757590f8a4d2169e245299c428add63ce54dc1d761d5d', '+52 555-987-6543');
+INSERT INTO Huespedes (Nombre, Apellido, Email, Contrasena, Telefono, Es_Administrador) VALUES
+('Carlos', 'Martinez', 'carlos.martinez@mail.com', 'scrypt:32768:8:1$qWuztHvEKYpIQvWS$7b3f818ceab7ae04849371641f1d76cffdc3b7bf9d19f8f28453d902308639bbd9941026ddc9212963752c0a6a05809babb3c82f532d331f089c87ecd3290707', '+52 555-123-4567', FALSE),
+('Laura', 'Gomez', 'laura.gomez@mail.com', 'scrypt:32768:8:1$U3QT9SvRGFWJKJzG$fe2c1eda339c8e7120cfc0530126c6f4237216dfe83603d35770d29e9244a7ac4393283bb90c4b92aab757590f8a4d2169e245299c428add63ce54dc1d761d5d', '+52 555-987-6543', FALSE),
+('Admin', 'Riviera', 'admin@hotelriviera.com', 'admin123', '+52 555-000-0000', TRUE);
 
 -- Tipos de Habitaciones
 INSERT INTO Tipos_Habitacion (Nombre_Tipo, Descripcion, Capacidad_Maxima, Precio_Noche) VALUES
@@ -157,7 +161,10 @@ INSERT INTO Habitaciones (ID_Tipo_Habitacion, Numero_Habitacion, Estado, Piso) V
 (7, '602', 'Disponible', 1),
 (8, '203', 'Disponible', 2),
 (8, '204', 'Disponible', 2),
-(9, '701', 'Disponible', 7);
+(9, '701', 'Disponible', 7),
+(5, '106', 'Disponible', 1),
+(8, '205', 'Disponible', 2),
+(4, '402', 'Disponible', 4);
 
 -- Catálogo de Servicios
 INSERT INTO Servicios (Nombre_Servicio, Descripcion_Corta, Imagen_URL, Precio, Disponible) VALUES

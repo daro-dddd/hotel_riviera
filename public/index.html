@@ -319,8 +319,8 @@
                         <input type="password" id="reg-password" placeholder="Crea una contraseña" required>
                     </div>
                     <div class="grupo-campo">
-                        <label for="reg-telefono">Teléfono</label>
-                        <input type="tel" id="reg-telefono" placeholder="+52 555-123-4567">
+                        <label for="reg-telefono">Teléfono * (Formato: +521234567890)</label>
+                        <input type="tel" id="reg-telefono" placeholder="+521234567890" maxlength="13" pattern="^\+[0-9]{12}$" required>
                     </div>
                     <button type="submit" class="btn btn-primario btn-bloque btn-largo">Registrarse</button>
                 </form>
@@ -593,6 +593,180 @@
                         <i class="fa-solid fa-spinner fa-spin"></i> Cargando tus reservas...
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- E. MODAL DEL PANEL ADMINISTRADOR -->
+    <div class="capa-modal" id="modal-panel-admin">
+        <div class="modal-tarjeta modal-grande">
+            <button class="cerrar-modal-btn" onclick="cerrarModal('modal-panel-admin')">&times;</button>
+            <div class="modal-cuerpo">
+                <h2 class="modal-titulo"><i class="fa-solid fa-gauge-high"></i> Panel de Administración - Hotel Riviera</h2>
+                <div class="linea-decorativa" style="margin-bottom: 20px;"></div>
+                
+                <!-- Barra de Pestañas (Tabs) -->
+                <div class="admin-tabs">
+                    <button class="tab-btn activo" data-tab="admin-tab-habitaciones" onclick="cambiarTabAdmin(this)">
+                        <i class="fa-solid fa-bed"></i> Habitaciones
+                    </button>
+                    <button class="tab-btn" data-tab="admin-tab-precios" onclick="cambiarTabAdmin(this)">
+                        <i class="fa-solid fa-tags"></i> Precios
+                    </button>
+                    <button class="tab-btn" data-tab="admin-tab-reservas" onclick="cambiarTabAdmin(this)">
+                        <i class="fa-solid fa-calendar-check"></i> Reservas
+                    </button>
+                    <button class="tab-btn" data-tab="admin-tab-servicios" onclick="cambiarTabAdmin(this)">
+                        <i class="fa-solid fa-bell"></i> Servicios
+                    </button>
+                    <button class="tab-btn" data-tab="admin-tab-testimonios" onclick="cambiarTabAdmin(this)">
+                        <i class="fa-solid fa-comments"></i> Comentarios
+                    </button>
+                </div>
+
+                <!-- CONTENIDO DE PESTAÑAS -->
+                
+                <!-- Pestaña 1: Habitaciones -->
+                <div id="admin-tab-habitaciones" class="admin-tab-contenido">
+                    <div class="admin-seccion-acciones">
+                        <h3>Gestión Física de Habitaciones</h3>
+                        <button class="btn btn-secundario" style="padding: 8px 16px; font-size: 0.9rem;" onclick="toggleFormularioAgregarHabitacion()">
+                            <i class="fa-solid fa-plus"></i> Nueva Habitación
+                        </button>
+                    </div>
+
+                    <!-- Formulario agregar habitación (Oculto por defecto) -->
+                    <div id="form-agregar-habitacion" class="formulario-admin-tarjeta oculto" style="margin-top: 15px; margin-bottom: 20px;">
+                        <h4>Registrar Nueva Habitación</h4>
+                        <form id="formulario-nueva-hab" onsubmit="ejecutarAgregarHabitacion(event)">
+                            <div class="grupo-campo-fila">
+                                <div class="grupo-campo">
+                                    <label for="new-hab-numero">Número de Habitación *</label>
+                                    <input type="text" id="new-hab-numero" placeholder="e.g. 106" required>
+                                </div>
+                                <div class="grupo-campo">
+                                    <label for="new-hab-tipo">Tipo de Habitación *</label>
+                                    <select id="new-hab-tipo" required>
+                                        <!-- Se rellenará dinámicamente -->
+                                    </select>
+                                </div>
+                                <div class="grupo-campo">
+                                    <label for="new-hab-piso">Piso *</label>
+                                    <input type="number" id="new-hab-piso" min="1" max="10" placeholder="1" required>
+                                </div>
+                                <div class="grupo-campo">
+                                    <label for="new-hab-estado">Estado Inicial</label>
+                                    <select id="new-hab-estado">
+                                        <option value="Disponible" selected>Disponible</option>
+                                        <option value="Ocupada">Ocupada</option>
+                                        <option value="Mantenimiento">En Limpieza/Mantenimiento</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grupo-botones-fila" style="justify-content: flex-end; margin-top: 15px; display: flex; gap: 10px;">
+                                <button type="button" class="btn btn-usuario-panel" onclick="toggleFormularioAgregarHabitacion()">Cancelar</button>
+                                <button type="submit" class="btn btn-verde">Agregar Habitación</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="admin-habitaciones-grid" id="admin-habitaciones-listado" style="margin-top: 15px;">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Pestaña 2: Precios -->
+                <div id="admin-tab-precios" class="admin-tab-contenido oculto">
+                    <h3>Modificar Precios de Categorías</h3>
+                    <p style="color: #666; margin-bottom: 20px; font-size: 0.9rem;">Edita los precios por noche directamente. Los precios se guardan en USD y se calculan automáticamente en MXN ($20.00 MXN de tipo de cambio).</p>
+                    <div class="tabla-contenedor">
+                        <table class="tabla-admin">
+                            <thead>
+                                <tr>
+                                    <th>Categoría / Tipo de Habitación</th>
+                                    <th>Capacidad Máx.</th>
+                                    <th>Precio Noche (USD)</th>
+                                    <th>Precio Noche (MXN)</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-precios-listado">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pestaña 3: Reservas -->
+                <div id="admin-tab-reservas" class="admin-tab-contenido oculto">
+                    <h3>Historial General de Reservaciones</h3>
+                    <div class="tabla-contenedor">
+                        <table class="tabla-admin">
+                            <thead>
+                                <tr>
+                                    <th>Folio</th>
+                                    <th>Huésped</th>
+                                    <th>Habitación</th>
+                                    <th>Entrada / Salida</th>
+                                    <th>Estado</th>
+                                    <th>Total Pagado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-reservas-listado">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pestaña 4: Servicios -->
+                <div id="admin-tab-servicios" class="admin-tab-contenido oculto">
+                    <h3>Gestión de Catálogo de Servicios</h3>
+                    <p style="color: #666; margin-bottom: 20px; font-size: 0.9rem;">Edita los precios de los servicios adicionales y habilita o deshabilita su disponibilidad en el formulario de reservaciones.</p>
+                    <div class="tabla-contenedor">
+                        <table class="tabla-admin">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Descripción</th>
+                                    <th>Precio (USD)</th>
+                                    <th>Precio (MXN)</th>
+                                    <th>Disponible en Web</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-servicios-listado">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pestaña 5: Testimonios -->
+                <div id="admin-tab-testimonios" class="admin-tab-contenido oculto">
+                    <h3>Gestión de Testimonios y Comentarios</h3>
+                    <p style="color: #666; margin-bottom: 20px; font-size: 0.9rem;">
+                        Edita el comentario o cambia el estado de aprobación. Para ocultar visualmente un testimonio del sitio web sin eliminarlo físicamente de la base de datos (según la política corporativa de historial de movimientos), haz clic en "Ocultar/Eliminar".
+                    </p>
+                    <div class="tabla-contenedor">
+                        <table class="tabla-admin">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">Huésped</th>
+                                    <th style="width: 15%;">Calificación</th>
+                                    <th style="width: 40%;">Comentario</th>
+                                    <th style="width: 10%; text-align: center;">Aprobado</th>
+                                    <th style="width: 15%;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-testimonios-listado">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

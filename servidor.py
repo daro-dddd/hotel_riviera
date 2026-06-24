@@ -5,6 +5,7 @@
 import os
 import threading
 import smtplib
+import re
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -67,6 +68,32 @@ def ejecutar_consulta(query, params=(), commit=False, fetchall=True, fetchone=Fa
     finally:
         cursor.close()
         conexion.close()
+
+def inicializar_columnas_adicionales():
+    if not conexion_pool:
+        print("[DB Setup] No se pudo inicializar columnas: no hay pool de conexiones.")
+        return
+    try:
+        # Verificar si la columna Eliminado existe en Testimonios
+        col_eliminado = ejecutar_consulta("SHOW COLUMNS FROM Testimonios LIKE 'Eliminado'")
+        if not col_eliminado:
+            ejecutar_consulta("ALTER TABLE Testimonios ADD COLUMN Eliminado BOOLEAN DEFAULT FALSE", commit=True)
+            print("[DB Setup] Columna 'Eliminado' agregada a la tabla Testimonios.")
+        else:
+            print("[DB Setup] Columna 'Eliminado' ya existe en la tabla Testimonios.")
+            
+        # Verificar si la columna Precio_Noche_Reservado existe en Reservas
+        col_precio = ejecutar_consulta("SHOW COLUMNS FROM Reservas LIKE 'Precio_Noche_Reservado'")
+        if not col_precio:
+            ejecutar_consulta("ALTER TABLE Reservas ADD COLUMN Precio_Noche_Reservado DECIMAL(10,2) NULL", commit=True)
+            print("[DB Setup] Columna 'Precio_Noche_Reservado' agregada a la tabla Reservas.")
+        else:
+            print("[DB Setup] Columna 'Precio_Noche_Reservado' ya existe en la tabla Reservas.")
+    except Exception as e:
+        print(f"[DB Setup Error] Error al configurar columnas adicionales: {e}")
+
+# Ejecutar la inicialización dinámica de columnas
+inicializar_columnas_adicionales()
 
 # =====================================================================
 # ENVÍO DE TICKETS DE RESERVA POR CORREO (SMTP HILADO)
@@ -174,7 +201,8 @@ def enviar_correo_ticket_worker(reserva_id, email_destinatario):
     # Buscamos la información detallada de la reserva
     query_reserva = """
         SELECT r.ID_Reserva, r.Fecha_Llegada, r.Fecha_Salida, r.Numero_Adultos, r.Numero_Ninos,
-               h.Numero_Habitacion, th.Nombre_Tipo, th.Precio_Noche,
+               h.Numero_Habitacion, th.Nombre_Tipo,
+               COALESCE(r.Precio_Noche_Reservado, th.Precio_Noche) as Precio_Noche,
                hu.Nombre, hu.Apellido, hu.Telefono, hu.Email
         FROM Reservas r
         JOIN Habitaciones h ON r.ID_Habitacion = h.ID_Habitacion
@@ -349,6 +377,10 @@ def registrar():
     if not nombre or not apellido or not email or not contrasena:
         return jsonify({'error': 'Llene todos los campos obligatorios.'}), 400
 
+    if telefono:
+        if not re.match(r'^\+[0-9]{12}$', telefono):
+            return jsonify({'error': 'El número de teléfono debe tener el formato "+" seguido de 12 dígitos numéricos (ej. +521234567890).'}), 400
+
     try:
         # Validar si ya existe
         existe = ejecutar_consulta('SELECT ID_Huesped FROM Huespedes WHERE Email = %s', (email,))
@@ -391,7 +423,7 @@ def iniciar_sesion():
     try:
         # Primero verificamos si el correo existe y obtenemos los datos
         usuario = ejecutar_consulta(
-            'SELECT ID_Huesped, Nombre, Apellido, Email, Contrasena, Telefono FROM Huespedes WHERE Email = %s',
+            'SELECT ID_Huesped, Nombre, Apellido, Email, Contrasena, Telefono, Es_Administrador FROM Huespedes WHERE Email = %s',
             (email,),
             fetchone=True
         )
@@ -431,7 +463,8 @@ def iniciar_sesion():
                 'nombre': usuario['Nombre'],
                 'apellido': usuario['Apellido'],
                 'email': usuario['Email'],
-                'telefono': usuario['Telefono']
+                'telefono': usuario['Telefono'],
+                'es_admin': bool(usuario['Es_Administrador'])
             }
         })
     except Exception as err:
@@ -445,9 +478,19 @@ def habitaciones_disponibles():
     salida = request.args.get('salida')
 
     try:
-        # Si no mandan fechas, regresamos todos los tipos de habitaciones
+        # Si no mandan fechas, regresamos todos los tipos de habitaciones con su conteo actual de físicas disponibles
         if not llegada or not salida:
-            tipos = ejecutar_consulta('SELECT * FROM Tipos_Habitacion')
+            query = """
+                SELECT th.ID_Tipo_Habitacion, th.Nombre_Tipo, th.Descripcion, th.Capacidad_Maxima, th.Precio_Noche,
+                       COALESCE(SUM(CASE WHEN h.Estado = 'Disponible' THEN 1 ELSE 0 END), 0) as Habitaciones_Disponibles
+                FROM Tipos_Habitacion th
+                LEFT JOIN Habitaciones h ON th.ID_Tipo_Habitacion = h.ID_Tipo_Habitacion
+                GROUP BY th.ID_Tipo_Habitacion
+            """
+            tipos = ejecutar_consulta(query)
+            # Convertir decimales para JSON
+            for t in tipos:
+                t['Precio_Noche'] = float(t['Precio_Noche'])
             return jsonify(tipos)
 
         # Si sí mandan fechas, buscamos habitaciones físicas libres
@@ -490,7 +533,7 @@ def obtener_testimonios():
                    h.Nombre, h.Apellido, h.URL_Foto_Perfil
             FROM Testimonios t
             JOIN Huespedes h ON t.ID_Huesped = h.ID_Huesped
-            WHERE t.Aprobado = TRUE
+            WHERE t.Aprobado = TRUE AND (t.Eliminado IS NULL OR t.Eliminado = FALSE)
             ORDER BY t.Fecha_Publicacion DESC
         """
         testimonios = ejecutar_consulta(query)
@@ -575,11 +618,21 @@ def reservar():
 
         id_habitacion = habitaciones[0]['ID_Habitacion']
 
-        # Crear reserva en la base de datos
+        # Obtener el precio actual por noche de la habitación para congelarlo en el registro
+        tipo_hab = ejecutar_consulta(
+            'SELECT Precio_Noche FROM Tipos_Habitacion WHERE ID_Tipo_Habitacion = %s',
+            (id_tipo_habitacion,),
+            fetchone=True
+        )
+        if not tipo_hab:
+            return jsonify({'error': 'El tipo de habitación no es válido.'}), 400
+        precio_noche_actual = float(tipo_hab['Precio_Noche'])
+
+        # Crear reserva en la base de datos congelando el precio actual por noche
         id_reserva = ejecutar_consulta(
-            """INSERT INTO Reservas (ID_Huesped, ID_Habitacion, Fecha_Llegada, Fecha_Salida, Numero_Adultos, Numero_Ninos, Estado_Reserva) 
-               VALUES (%s, %s, %s, %s, %s, %s, 'Confirmada')""",
-            (id_huesped, id_habitacion, fecha_llegada, fecha_salida, adultos, ninos),
+            """INSERT INTO Reservas (ID_Huesped, ID_Habitacion, Fecha_Llegada, Fecha_Salida, Numero_Adultos, Numero_Ninos, Estado_Reserva, Precio_Noche_Reservado) 
+               VALUES (%s, %s, %s, %s, %s, %s, 'Confirmada', %s)""",
+            (id_huesped, id_habitacion, fecha_llegada, fecha_salida, adultos, ninos, precio_noche_actual),
             commit=True
         )
 
@@ -620,8 +673,9 @@ def mis_reservas():
     try:
         query = """
             SELECT r.ID_Reserva, r.Fecha_Llegada, r.Fecha_Salida, r.Numero_Adultos, r.Numero_Ninos, r.Estado_Reserva, r.Fecha_Creacion,
-                   h.Numero_Habitacion, th.Nombre_Tipo, th.Precio_Noche,
-                   (DATEDIFF(r.Fecha_Salida, r.Fecha_Llegada) * th.Precio_Noche) as Costo_Hospedaje
+                   h.Numero_Habitacion, th.Nombre_Tipo, 
+                   COALESCE(r.Precio_Noche_Reservado, th.Precio_Noche) as Precio_Noche,
+                   (DATEDIFF(r.Fecha_Salida, r.Fecha_Llegada) * COALESCE(r.Precio_Noche_Reservado, th.Precio_Noche)) as Costo_Hospedaje
             FROM Reservas r
             JOIN Habitaciones h ON r.ID_Habitacion = h.ID_Habitacion
             JOIN Tipos_Habitacion th ON h.ID_Tipo_Habitacion = th.ID_Tipo_Habitacion
@@ -732,6 +786,308 @@ def suscribir():
     except Exception as err:
         print(f"Error al suscribir: {err}")
         return jsonify({'error': 'Falla al procesar suscripción.'}), 500
+
+
+# =====================================================================
+# RUTAS API DE ADMINISTRACIÓN (Visuales e Intuitivas)
+# =====================================================================
+
+# 1. Obtener todas las habitaciones del hotel (para el administrador)
+@app.route('/api/admin/habitaciones', methods=['GET'])
+def admin_obtener_habitaciones():
+    try:
+        query = """
+            SELECT h.ID_Habitacion, h.ID_Tipo_Habitacion, h.Numero_Habitacion, h.Estado, h.Piso,
+                   th.Nombre_Tipo, th.Precio_Noche, th.Capacidad_Maxima
+            FROM Habitaciones h
+            JOIN Tipos_Habitacion th ON h.ID_Tipo_Habitacion = th.ID_Tipo_Habitacion
+            ORDER BY h.Piso ASC, h.Numero_Habitacion ASC
+        """
+        habitaciones = ejecutar_consulta(query)
+        # Convertir decimales a float para JSON
+        for h in habitaciones:
+            h['Precio_Noche'] = float(h['Precio_Noche'])
+        return jsonify(habitaciones)
+    except Exception as err:
+        print(f"Error admin al obtener habitaciones: {err}")
+        return jsonify({'error': 'Error de base de datos al consultar habitaciones.'}), 500
+
+# 2. Modificar el estado de una habitación (Disponible, Ocupada, Mantenimiento)
+@app.route('/api/admin/habitaciones/estado', methods=['POST'])
+def admin_actualizar_estado_habitacion():
+    datos = request.get_json()
+    id_habitacion = datos.get('id_habitacion')
+    estado = datos.get('estado')
+    
+    if not id_habitacion or not estado:
+        return jsonify({'error': 'Faltan datos requeridos (id_habitacion, estado).'}), 400
+        
+    if estado not in ['Disponible', 'Ocupada', 'Mantenimiento']:
+        return jsonify({'error': 'Estado no válido.'}), 400
+        
+    try:
+        ejecutar_consulta(
+            'UPDATE Habitaciones SET Estado = %s WHERE ID_Habitacion = %s',
+            (estado, id_habitacion),
+            commit=True
+        )
+        return jsonify({'mensaje': '¡Estado de la habitación actualizado con éxito!'})
+    except Exception as err:
+        print(f"Error admin al cambiar estado: {err}")
+        return jsonify({'error': 'Error al actualizar el estado en la base de datos.'}), 500
+
+# 3. Modificar el precio de un tipo de habitación
+@app.route('/api/admin/habitaciones/precio', methods=['POST'])
+def admin_actualizar_precio_tipo():
+    datos = request.get_json()
+    id_tipo_habitacion = datos.get('id_tipo_habitacion')
+    precio_noche = datos.get('precio_noche')
+    
+    if not id_tipo_habitacion or precio_noche is None:
+        return jsonify({'error': 'Faltan datos requeridos.'}), 400
+        
+    try:
+        precio_val = float(precio_noche)
+        if precio_val <= 0:
+            return jsonify({'error': 'El precio debe ser mayor a 0.'}), 400
+            
+        ejecutar_consulta(
+            'UPDATE Tipos_Habitacion SET Precio_Noche = %s WHERE ID_Tipo_Habitacion = %s',
+            (precio_val, id_tipo_habitacion),
+            commit=True
+        )
+        return jsonify({'mensaje': '¡Precio de habitación actualizado con éxito!'})
+    except Exception as err:
+        print(f"Error admin al cambiar precio: {err}")
+        return jsonify({'error': 'Error al actualizar el precio en la base de datos.'}), 500
+
+# 4. Agregar una nueva habitación física al hotel
+@app.route('/api/admin/habitaciones/agregar', methods=['POST'])
+def admin_agregar_habitacion():
+    datos = request.get_json()
+    id_tipo_habitacion = datos.get('id_tipo_habitacion')
+    numero_habitacion = datos.get('numero_habitacion')
+    estado = datos.get('estado', 'Disponible')
+    piso = datos.get('piso')
+    
+    if not id_tipo_habitacion or not numero_habitacion or not piso:
+        return jsonify({'error': 'Faltan datos requeridos para la habitación.'}), 400
+        
+    try:
+        # Validar si ya existe ese número
+        existe = ejecutar_consulta('SELECT ID_Habitacion FROM Habitaciones WHERE Numero_Habitacion = %s', (numero_habitacion,))
+        if existe:
+            return jsonify({'error': f'La habitación número {numero_habitacion} ya existe.'}), 400
+            
+        id_creado = ejecutar_consulta(
+            'INSERT INTO Habitaciones (ID_Tipo_Habitacion, Numero_Habitacion, Estado, Piso) VALUES (%s, %s, %s, %s)',
+            (id_tipo_habitacion, numero_habitacion, estado, piso),
+            commit=True
+        )
+        return jsonify({'mensaje': f'Habitación {numero_habitacion} agregada con éxito.', 'id': id_creado}), 201
+    except Exception as err:
+        print(f"Error admin al agregar habitación: {err}")
+        return jsonify({'error': 'Error de base de datos al agregar la habitación.'}), 500
+
+# 5. Obtener todas las reservas de todos los huéspedes (para el administrador)
+@app.route('/api/admin/reservas', methods=['GET'])
+def admin_obtener_reservas():
+    try:
+        query = """
+            SELECT r.ID_Reserva, r.Fecha_Llegada, r.Fecha_Salida, r.Numero_Adultos, r.Numero_Ninos, r.Estado_Reserva, r.Fecha_Creacion,
+                   h.Numero_Habitacion, th.Nombre_Tipo, 
+                   COALESCE(r.Precio_Noche_Reservado, th.Precio_Noche) as Precio_Noche,
+                   hu.Nombre, hu.Apellido, hu.Email, hu.Telefono,
+                   (DATEDIFF(r.Fecha_Salida, r.Fecha_Llegada) * COALESCE(r.Precio_Noche_Reservado, th.Precio_Noche)) as Costo_Hospedaje
+            FROM Reservas r
+            JOIN Habitaciones h ON r.ID_Habitacion = h.ID_Habitacion
+            JOIN Tipos_Habitacion th ON h.ID_Tipo_Habitacion = th.ID_Tipo_Habitacion
+            JOIN Huespedes hu ON r.ID_Huesped = hu.ID_Huesped
+            ORDER BY r.Fecha_Creacion DESC
+        """
+        reservas = ejecutar_consulta(query)
+        
+        resultado_final = []
+        for r in reservas:
+            if hasattr(r['Fecha_Llegada'], 'strftime'):
+                r['Fecha_Llegada'] = r['Fecha_Llegada'].strftime('%Y-%m-%d')
+            if hasattr(r['Fecha_Salida'], 'strftime'):
+                r['Fecha_Salida'] = r['Fecha_Salida'].strftime('%Y-%m-%d')
+            if hasattr(r['Fecha_Creacion'], 'strftime'):
+                r['Fecha_Creacion'] = r['Fecha_Creacion'].strftime('%Y-%m-%d %H:%M:%S')
+                
+            # Cargar servicios asociados
+            q_servs = """
+                SELECT s.Nombre_Servicio, s.Precio, rs.Cantidad, (s.Precio * rs.Cantidad) as Costo_Servicio
+                FROM Reservas_Servicios rs
+                JOIN Servicios s ON rs.ID_Servicio = s.ID_Servicio
+                WHERE rs.ID_Reserva = %s
+            """
+            servs = ejecutar_consulta(q_servs, (r['ID_Reserva'],))
+            
+            costo_servs_total = 0.0
+            for s in servs:
+                costo_servs_total += float(s['Costo_Servicio'] or 0.0)
+                s['Precio'] = float(s['Precio'])
+                s['Costo_Servicio'] = float(s['Costo_Servicio'])
+                
+            costo_hospedaje = float(r['Costo_Hospedaje'])
+            costo_total = costo_hospedaje + costo_servs_total
+            
+            r['Precio_Noche'] = float(r['Precio_Noche'])
+            r['Costo_Hospedaje'] = costo_hospedaje
+            r['Costo_Total'] = costo_total
+            r['ServiciosAdicionales'] = servs
+            resultado_final.append(r)
+            
+        return jsonify(resultado_final)
+    except Exception as err:
+        print(f"Error admin al obtener reservas: {err}")
+        return jsonify({'error': 'Error de base de datos al obtener historial completo.'}), 500
+
+# 6. Actualizar el estado de una reserva
+@app.route('/api/admin/reservas/estado', methods=['POST'])
+def admin_actualizar_estado_reserva():
+    datos = request.get_json()
+    id_reserva = datos.get('id_reserva')
+    estado = datos.get('estado')
+    
+    if not id_reserva or not estado:
+        return jsonify({'error': 'Faltan datos requeridos (id_reserva, estado).'}), 400
+        
+    if estado not in ['Pendiente', 'Confirmada', 'Cancelada', 'Finalizada']:
+        return jsonify({'error': 'Estado de reserva no válido.'}), 400
+        
+    try:
+        # Obtener datos de la reserva antes de actualizar para el envío de correo si es cancelación
+        query_res = """
+            SELECT r.ID_Reserva, r.Fecha_Llegada, r.Fecha_Salida,
+                   h.Numero_Habitacion, th.Nombre_Tipo,
+                   hu.Nombre, hu.Apellido, hu.Email
+            FROM Reservas r
+            JOIN Habitaciones h ON r.ID_Habitacion = h.ID_Habitacion
+            JOIN Tipos_Habitacion th ON h.ID_Tipo_Habitacion = th.ID_Tipo_Habitacion
+            JOIN Huespedes hu ON r.ID_Huesped = hu.ID_Huesped
+            WHERE r.ID_Reserva = %s
+        """
+        detalles = ejecutar_consulta(query_res, (id_reserva,), fetchone=True)
+
+        ejecutar_consulta(
+            'UPDATE Reservas SET Estado_Reserva = %s WHERE ID_Reserva = %s',
+            (estado, id_reserva),
+            commit=True
+        )
+        
+        # Si el admin lo cambia a "Cancelada", enviar correo en segundo plano
+        if estado == 'Cancelada' and detalles:
+            enviar_correo_cancelacion_async(detalles)
+            
+        return jsonify({'mensaje': '¡Estado de reserva actualizado con éxito!'})
+    except Exception as err:
+        print(f"Error admin al actualizar estado de reserva: {err}")
+        return jsonify({'error': 'Error de base de datos al actualizar la reserva.'}), 500
+
+# 7. Obtener lista de todos los servicios para admin (incluyendo inactivos)
+@app.route('/api/admin/servicios', methods=['GET'])
+def admin_obtener_servicios():
+    try:
+        servicios = ejecutar_consulta('SELECT * FROM Servicios')
+        for s in servicios:
+            s['Precio'] = float(s['Precio'])
+        return jsonify(servicios)
+    except Exception as err:
+        print(f"Error admin al obtener servicios: {err}")
+        return jsonify({'error': 'Error de base de datos al obtener el catálogo de servicios.'}), 500
+
+# 8. Modificar precio y disponibilidad de servicios
+@app.route('/api/admin/servicios/actualizar', methods=['POST'])
+def admin_actualizar_servicio():
+    datos = request.get_json()
+    id_servicio = datos.get('id_servicio')
+    precio = datos.get('precio')
+    disponible = datos.get('disponible')
+    
+    if not id_servicio or precio is None or disponible is None:
+        return jsonify({'error': 'Faltan datos requeridos.'}), 400
+        
+    try:
+        precio_val = float(precio)
+        if precio_val < 0:
+            return jsonify({'error': 'El precio no puede ser negativo.'}), 400
+            
+        ejecutar_consulta(
+            'UPDATE Servicios SET Precio = %s, Disponible = %s WHERE ID_Servicio = %s',
+            (precio_val, int(disponible), id_servicio),
+            commit=True
+        )
+        return jsonify({'mensaje': '¡Servicio actualizado con éxito!'})
+    except Exception as err:
+        print(f"Error admin al actualizar servicio: {err}")
+        return jsonify({'error': 'Error de base de datos al actualizar el servicio.'}), 500
+
+# 9. Obtener todos los testimonios no eliminados para admin
+@app.route('/api/admin/testimonios', methods=['GET'])
+def admin_obtener_testimonios():
+    try:
+        query = """
+            SELECT t.ID_Testimonio, t.Comentario, t.Calificacion_Estrellas, t.Fecha_Publicacion, t.Aprobado,
+                   h.Nombre, h.Apellido, h.Email
+            FROM Testimonios t
+            JOIN Huespedes h ON t.ID_Huesped = h.ID_Huesped
+            WHERE t.Eliminado IS NULL OR t.Eliminado = FALSE
+            ORDER BY t.Fecha_Publicacion DESC
+        """
+        testimonios = ejecutar_consulta(query)
+        for t in testimonios:
+            if hasattr(t['Fecha_Publicacion'], 'strftime'):
+                t['Fecha_Publicacion'] = t['Fecha_Publicacion'].strftime('%Y-%m-%d')
+            t['Aprobado'] = bool(t['Aprobado'])
+        return jsonify(testimonios)
+    except Exception as err:
+        print(f"Error admin al obtener testimonios: {err}")
+        return jsonify({'error': 'Error de base de datos al obtener testimonios.'}), 500
+
+# 10. Actualizar comentario y estado de aprobación de un testimonio
+@app.route('/api/admin/testimonios/actualizar', methods=['POST'])
+def admin_actualizar_testimonio():
+    datos = request.get_json()
+    id_testimonio = datos.get('id_testimonio')
+    comentario = datos.get('comentario')
+    aprobado = datos.get('aprobado')
+    
+    if not id_testimonio or comentario is None or aprobado is None:
+        return jsonify({'error': 'Faltan datos requeridos.'}), 400
+        
+    try:
+        ejecutar_consulta(
+            'UPDATE Testimonios SET Comentario = %s, Aprobado = %s WHERE ID_Testimonio = %s',
+            (comentario, int(aprobado), id_testimonio),
+            commit=True
+        )
+        return jsonify({'mensaje': '¡Testimonio actualizado con éxito!'})
+    except Exception as err:
+        print(f"Error admin al actualizar testimonio: {err}")
+        return jsonify({'error': 'Error de base de datos al actualizar el testimonio.'}), 500
+
+# 11. Eliminar testimonio (Soft Delete)
+@app.route('/api/admin/testimonios/eliminar', methods=['POST'])
+def admin_eliminar_testimonio():
+    datos = request.get_json()
+    id_testimonio = datos.get('id_testimonio')
+    
+    if not id_testimonio:
+        return jsonify({'error': 'Falta el ID del testimonio.'}), 400
+        
+    try:
+        ejecutar_consulta(
+            'UPDATE Testimonios SET Eliminado = TRUE WHERE ID_Testimonio = %s',
+            (id_testimonio,),
+            commit=True
+        )
+        return jsonify({'mensaje': '¡Testimonio ocultado/eliminado con éxito!'})
+    except Exception as err:
+        print(f"Error admin al eliminar testimonio: {err}")
+        return jsonify({'error': 'Error de base de datos al eliminar el testimonio.'}), 500
 
 
 # =====================================================================
