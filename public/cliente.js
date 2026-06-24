@@ -148,7 +148,7 @@ async function ejecutarLogin(event) {
             }
             
             if (respuesta.status === 404) {
-                if (confirm('Este correo electrónico no está registrado. ¿Deseas crear una cuenta nueva?')) {
+                if (await confirm('Este correo electrónico no está registrado. ¿Deseas crear una cuenta nueva?')) {
                     cambiarModal('modal-login', 'modal-registro');
                 }
             } else {
@@ -222,12 +222,12 @@ async function ejecutarRegistro(event) {
 }
 
 // Cerrar sesión
-function cerrarSesion() {
-    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+async function cerrarSesion() {
+    if (await confirm('¿Estás seguro de que deseas cerrar sesión?')) {
         localStorage.removeItem('usuario_riviera');
         usuarioLogueado = null;
         actualizarMenuUsuario(false);
-        alert('Sesión cerrada correctamente.');
+        await alert('Sesión cerrada correctamente.');
         window.location.reload(); // Recargamos para limpiar cualquier estado visible de reservas
     }
 }
@@ -1030,7 +1030,7 @@ async function cargarHistorialReservas() {
 
 // Cancela la reserva desde el panel del usuario
 async function cancelarReservaCliente(idReserva) {
-    if (!confirm('¿Realmente deseas cancelar esta reservación? Esta acción es definitiva.')) return;
+    if (!await confirm('¿Realmente deseas cancelar esta reservación? Esta acción es definitiva.')) return;
     
     try {
         const respuesta = await fetch('/api/cancelar-reserva', {
@@ -1669,7 +1669,7 @@ async function adminCargarReservas() {
 
 // Envía la petición para cambiar el estado de una reserva desde la vista del admin
 async function cambiarEstadoReservaAdmin(idReserva, nuevoEstado) {
-    if (nuevoEstado === 'Cancelada' && !confirm('¿Realmente deseas marcar esta reserva como cancelada? Se enviará un correo de confirmación al huésped.')) {
+    if (nuevoEstado === 'Cancelada' && !await confirm('¿Realmente deseas marcar esta reserva como cancelada? Se enviará un correo de confirmación al huésped.')) {
         adminCargarReservas(); // recargar para revertir select
         return;
     }
@@ -1901,7 +1901,7 @@ async function guardarTestimonioAdmin(idTestimonio) {
 
 // Soft-delete de testimonio
 async function eliminarTestimonioAdmin(idTestimonio) {
-    if (!confirm('¿Realmente deseas ocultar este testimonio del sitio web? El comentario no se borrará de la base de datos (según la política corporativa de movimientos), pero ya no será visible en las listas públicas ni de administración.')) {
+    if (!await confirm('¿Realmente deseas ocultar este testimonio del sitio web? El comentario no se borrará de la base de datos (según la política corporativa de movimientos), pero ya no será visible en las listas públicas ni de administración.')) {
         return;
     }
     
@@ -1927,3 +1927,137 @@ async function eliminarTestimonioAdmin(idTestimonio) {
         alert('Falla al conectar con el servidor.');
     }
 }
+
+// =====================================================================
+// 12. DIÁLOGOS DE ALERTA Y CONFIRMACIÓN PERSONALIZADOS
+// =====================================================================
+
+let alertResolve = null;
+let confirmResolve = null;
+
+/**
+ * Muestra una alerta interactiva personalizada con estilo premium.
+ * @param {string} mensaje - El texto del mensaje.
+ * @param {string} titulo - Título de la alerta.
+ * @param {string} tipo - Tipo de alerta ('info', 'exito', 'advertencia', 'error').
+ * @returns {Promise<void>}
+ */
+function mostrarAlerta(mensaje, titulo = 'Aviso', tipo = 'info') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-alert-modal');
+        const iconoCaja = document.getElementById('custom-alert-icono');
+        const tituloEl = document.getElementById('custom-alert-titulo');
+        const mensajeEl = document.getElementById('custom-alert-mensaje');
+        const botonesCaja = document.getElementById('custom-alert-botones');
+        
+        if (!modal) {
+            console.warn('Modal de alerta no encontrado en el DOM');
+            resolve();
+            return;
+        }
+
+        // Definir icono y color según el tipo
+        let iconoHtml = '<i class="fa-solid fa-circle-info" style="color: var(--azul-oscuro);"></i>';
+        if (tipo === 'exito') {
+            iconoHtml = '<i class="fa-solid fa-circle-check" style="color: var(--verde-confirmar);"></i>';
+        } else if (tipo === 'advertencia') {
+            iconoHtml = '<i class="fa-solid fa-triangle-exclamation" style="color: #ffb300;"></i>';
+        } else if (tipo === 'error') {
+            iconoHtml = '<i class="fa-solid fa-circle-xmark" style="color: var(--rojo-cancelar);"></i>';
+        }
+
+        iconoCaja.innerHTML = iconoHtml;
+        tituloEl.textContent = titulo;
+        mensajeEl.textContent = mensaje;
+
+        botonesCaja.innerHTML = `
+            <button class="btn btn-primario" id="btn-custom-alert-ok" style="min-width: 100px;">Aceptar</button>
+        `;
+
+        modal.classList.add('activo');
+        
+        const btnOk = document.getElementById('btn-custom-alert-ok');
+        
+        alertResolve = () => {
+            modal.classList.remove('activo');
+            btnOk.removeEventListener('click', alertResolve);
+            resolve();
+        };
+
+        btnOk.addEventListener('click', alertResolve);
+    });
+}
+
+/**
+ * Muestra un modal de confirmación personalizado.
+ * @param {string} mensaje - El texto de la confirmación.
+ * @param {string} titulo - Título de la confirmación.
+ * @returns {Promise<boolean>}
+ */
+function mostrarConfirmacion(mensaje, titulo = 'Confirmación') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-alert-modal');
+        const iconoCaja = document.getElementById('custom-alert-icono');
+        const tituloEl = document.getElementById('custom-alert-titulo');
+        const mensajeEl = document.getElementById('custom-alert-mensaje');
+        const botonesCaja = document.getElementById('custom-alert-botones');
+        
+        if (!modal) {
+            console.warn('Modal de alerta no encontrado en el DOM');
+            resolve(false);
+            return;
+        }
+
+        iconoCaja.innerHTML = '<i class="fa-solid fa-circle-question" style="color: var(--azul-oscuro);"></i>';
+        tituloEl.textContent = titulo;
+        mensajeEl.textContent = mensaje;
+
+        botonesCaja.innerHTML = `
+            <button class="btn btn-usuario-panel" id="btn-custom-confirm-cancel" style="min-width: 100px;">Cancelar</button>
+            <button class="btn btn-secundario" id="btn-custom-confirm-ok" style="min-width: 100px;">Aceptar</button>
+        `;
+
+        modal.classList.add('activo');
+
+        const btnCancel = document.getElementById('btn-custom-confirm-cancel');
+        const btnOk = document.getElementById('btn-custom-confirm-ok');
+
+        const limpiarYResolver = (resultado) => {
+            modal.classList.remove('activo');
+            btnCancel.removeEventListener('click', alCancelar);
+            btnOk.removeEventListener('click', alAceptar);
+            resolve(resultado);
+        };
+
+        const alCancelar = () => limpiarYResolver(false);
+        const alAceptar = () => limpiarYResolver(true);
+
+        btnCancel.addEventListener('click', alCancelar);
+        btnOk.addEventListener('click', alAceptar);
+    });
+}
+
+// Sobrescribir los métodos globales nativos para que usen nuestro diseño
+window.alert = function(mensaje) {
+    let titulo = 'Aviso';
+    let tipo = 'info';
+    
+    const msgLower = mensaje.toLowerCase();
+    if (msgLower.includes('error') || msgLower.includes('falla') || msgLower.includes('rechazada') || msgLower.includes('no se pudo')) {
+        titulo = 'Error';
+        tipo = 'error';
+    } else if (msgLower.includes('éxito') || msgLower.includes('bienvenido') || msgLower.includes('correctamente') || msgLower.includes('exitosa') || msgLower.includes('confirmada')) {
+        titulo = 'Éxito';
+        tipo = 'exito';
+    } else if (msgLower.includes('atención') || msgLower.includes('advertencia') || msgLower.includes('por favor') || msgLower.includes('seguro') || msgLower.includes('debes')) {
+        titulo = 'Atención';
+        tipo = 'advertencia';
+    }
+
+    return mostrarAlerta(mensaje, titulo, tipo);
+};
+
+window.confirm = function(mensaje) {
+    return mostrarConfirmacion(mensaje, '¿Estás seguro?');
+};
+
