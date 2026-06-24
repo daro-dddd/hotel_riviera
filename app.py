@@ -718,11 +718,11 @@ def habitaciones_disponibles():
     salida = request.args.get('salida')
 
     try:
-        # Si no mandan fechas, regresamos todos los tipos de habitaciones con su conteo actual de físicas disponibles
+        # Si no mandan fechas, regresamos todos los tipos de habitaciones con su conteo de físicas activas (Disponibles o Reservadas)
         if not llegada or not salida:
             query = """
                 SELECT th.ID_Tipo_Habitacion, th.Nombre_Tipo, th.Descripcion, th.Capacidad_Maxima, th.Precio_Noche,
-                       COALESCE(SUM(CASE WHEN h.Estado = 'Disponible' THEN 1 ELSE 0 END), 0) as Habitaciones_Disponibles
+                       COALESCE(SUM(CASE WHEN h.Estado IN ('Disponible', 'Reservada') THEN 1 ELSE 0 END), 0) as Habitaciones_Disponibles
                 FROM Tipos_Habitacion th
                 LEFT JOIN Habitaciones h ON th.ID_Tipo_Habitacion = h.ID_Tipo_Habitacion
                 GROUP BY th.ID_Tipo_Habitacion
@@ -733,13 +733,13 @@ def habitaciones_disponibles():
                 t['Precio_Noche'] = float(t['Precio_Noche'])
             return jsonify(tipos)
 
-        # Si sí mandan fechas, buscamos habitaciones físicas libres
+        # Si sí mandan fechas, buscamos habitaciones físicas libres (con estado Disponible o Reservada pero sin reservas traslapadas)
         query_disponible = """
             SELECT th.ID_Tipo_Habitacion, th.Nombre_Tipo, th.Descripcion, th.Capacidad_Maxima, th.Precio_Noche,
                    COALESCE(COUNT(h.ID_Habitacion), 0) as Habitaciones_Disponibles
             FROM Tipos_Habitacion th
             LEFT JOIN Habitaciones h ON th.ID_Tipo_Habitacion = h.ID_Tipo_Habitacion
-                AND h.Estado = 'Disponible'
+                AND h.Estado IN ('Disponible', 'Reservada')
                 AND h.ID_Habitacion NOT IN (
                     SELECT ID_Habitacion 
                     FROM Reservas 
@@ -840,12 +840,12 @@ def reservar():
         if fsal <= flleg:
             return jsonify({'error': 'La fecha de salida debe ser después de la fecha de llegada.'}), 400
 
-        # Buscar habitación física disponible
+        # Buscar habitación física disponible (que esté activa y sin reservas traslapadas)
         query_libre = """
             SELECT ID_Habitacion 
             FROM Habitaciones 
             WHERE ID_Tipo_Habitacion = %s 
-            AND Estado = 'Disponible'
+            AND Estado IN ('Disponible', 'Reservada')
             AND ID_Habitacion NOT IN (
                 SELECT ID_Habitacion 
                 FROM Reservas 

@@ -602,6 +602,8 @@ function cargarChecklistServicios() {
     });
 }
 
+let disponibilidadValida = true;
+
 // Valida si el número de huéspedes excede el límite permitido
 function validarCapacidadExcedida() {
     const adultos = parseInt(document.getElementById('res-form-adultos').value) || 0;
@@ -609,15 +611,70 @@ function validarCapacidadExcedida() {
     const totalPersonas = adultos + ninos;
     
     const alerta = document.getElementById('alerta-capacidad-reserva');
-    const btnConfirmar = document.getElementById('btn-confirmar-reserva');
     
     if (habitacionSeleccionada && totalPersonas > habitacionSeleccionada.Capacidad_Maxima) {
         alerta.classList.remove('oculto');
+    } else {
+        alerta.classList.add('oculto');
+    }
+    actualizarBotonConfirmar();
+}
+
+// Valida dinámicamente si hay habitaciones físicas disponibles en las fechas elegidas
+async function validarDisponibilidadFechas() {
+    if (!habitacionSeleccionada) return;
+    
+    const llegada = document.getElementById('res-form-llegada').value;
+    const salida = document.getElementById('res-form-salida').value;
+    
+    if (!llegada || !salida) {
+        disponibilidadValida = false;
+        actualizarBotonConfirmar();
+        return;
+    }
+    
+    try {
+        const url = `/api/habitaciones-disponibles?llegada=${llegada}&salida=${salida}`;
+        const respuesta = await fetch(url);
+        const habitaciones = await respuesta.json();
+        
+        if (respuesta.ok) {
+            const habInfo = habitaciones.find(h => h.ID_Tipo_Habitacion === habitacionSeleccionada.ID_Tipo_Habitacion);
+            const disponibles = habInfo ? parseInt(habInfo.Habitaciones_Disponibles) : 0;
+            
+            const alertaDisp = document.getElementById('alerta-disponibilidad-reserva');
+            if (disponibles <= 0) {
+                disponibilidadValida = false;
+                if (alertaDisp) alertaDisp.classList.remove('oculto');
+            } else {
+                disponibilidadValida = true;
+                if (alertaDisp) alertaDisp.classList.add('oculto');
+            }
+        } else {
+            disponibilidadValida = false;
+        }
+    } catch (err) {
+        console.error('Error al validar disponibilidad:', err);
+        disponibilidadValida = false;
+    }
+    
+    actualizarBotonConfirmar();
+}
+
+// Centraliza la activación/desactivación del botón de continuar
+function actualizarBotonConfirmar() {
+    const adultos = parseInt(document.getElementById('res-form-adultos').value) || 0;
+    const ninos = parseInt(document.getElementById('res-form-ninos').value) || 0;
+    const totalPersonas = adultos + ninos;
+    
+    const capacidadExcedida = habitacionSeleccionada && totalPersonas > habitacionSeleccionada.Capacidad_Maxima;
+    const btnConfirmar = document.getElementById('btn-confirmar-reserva');
+    
+    if (capacidadExcedida || !disponibilidadValida) {
         btnConfirmar.disabled = true;
         btnConfirmar.style.opacity = '0.5';
         btnConfirmar.style.cursor = 'not-allowed';
     } else {
-        alerta.classList.add('oculto');
         btnConfirmar.disabled = false;
         btnConfirmar.style.opacity = '1';
         btnConfirmar.style.cursor = 'pointer';
@@ -670,6 +727,8 @@ function calcularPrecioTotal() {
     document.getElementById('res-calc-hospedaje-total').textContent = `$${subtotalHospedajeMxn.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
     document.getElementById('res-calc-servicios-total').textContent = `$${totalServiciosMxn.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
     document.getElementById('res-calc-total-final').textContent = `$${totalFinalMxn.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+    
+    validarDisponibilidadFechas();
 }
 
 // Envía la confirmación de la reserva al backend
