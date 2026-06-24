@@ -89,6 +89,16 @@ def inicializar_columnas_adicionales():
             print("[DB Setup] Columna 'Precio_Noche_Reservado' agregada a la tabla Reservas.")
         else:
             print("[DB Setup] Columna 'Precio_Noche_Reservado' ya existe en la tabla Reservas.")
+            
+        # Verificar si la columna Estado en Habitaciones ya acepta 'Reservada'
+        col_estado = ejecutar_consulta("SHOW COLUMNS FROM Habitaciones LIKE 'Estado'")
+        if col_estado:
+            tipo_col = col_estado[0]['Type']
+            if 'Reservada' not in tipo_col:
+                ejecutar_consulta("ALTER TABLE Habitaciones MODIFY COLUMN Estado ENUM('Disponible', 'Ocupada', 'Mantenimiento', 'Reservada') DEFAULT 'Disponible'", commit=True)
+                print("[DB Setup] Columna 'Estado' de Habitaciones modificada para incluir 'Reservada'.")
+            else:
+                print("[DB Setup] Columna 'Estado' de Habitaciones ya incluye 'Reservada'.")
     except Exception as e:
         print(f"[DB Setup Error] Error al configurar columnas adicionales: {e}")
 
@@ -726,19 +736,21 @@ def habitaciones_disponibles():
         # Si sí mandan fechas, buscamos habitaciones físicas libres
         query_disponible = """
             SELECT th.ID_Tipo_Habitacion, th.Nombre_Tipo, th.Descripcion, th.Capacidad_Maxima, th.Precio_Noche,
-                   COUNT(h.ID_Habitacion) as Habitaciones_Disponibles
-            FROM Habitaciones h
-            JOIN Tipos_Habitacion th ON h.ID_Tipo_Habitacion = th.ID_Tipo_Habitacion
-            WHERE h.Estado = 'Disponible'
-            AND h.ID_Habitacion NOT IN (
-                SELECT ID_Habitacion 
-                FROM Reservas 
-                WHERE Estado_Reserva IN ('Pendiente', 'Confirmada')
-                AND NOT (Fecha_Salida <= %s OR Fecha_Llegada >= %s)
-            )
+                   COALESCE(COUNT(h.ID_Habitacion), 0) as Habitaciones_Disponibles
+            FROM Tipos_Habitacion th
+            LEFT JOIN Habitaciones h ON th.ID_Tipo_Habitacion = h.ID_Tipo_Habitacion
+                AND h.Estado = 'Disponible'
+                AND h.ID_Habitacion NOT IN (
+                    SELECT ID_Habitacion 
+                    FROM Reservas 
+                    WHERE Estado_Reserva IN ('Pendiente', 'Confirmada')
+                    AND NOT (Fecha_Salida <= %s OR Fecha_Llegada >= %s)
+                )
             GROUP BY th.ID_Tipo_Habitacion;
         """
         resultado = ejecutar_consulta(query_disponible, (llegada, salida))
+        for r in resultado:
+            r['Precio_Noche'] = float(r['Precio_Noche'])
         return jsonify(resultado)
     except Exception as err:
         print(f"Error al buscar disponibles: {err}")
@@ -866,6 +878,13 @@ def reservar():
             commit=True
         )
 
+        # Actualizar el estado de la habitación física a Reservada
+        ejecutar_consulta(
+            'UPDATE Habitaciones SET Estado = "Reservada" WHERE ID_Habitacion = %s',
+            (id_habitacion,),
+            commit=True
+        )
+
         # Registrar servicios asociados
         if servicios and isinstance(servicios, list):
             for serv in servicios:
@@ -967,7 +986,7 @@ def cancelar_reserva():
     try:
         # Obtener información del huésped y de la reserva para el correo antes de cancelar
         query_res = """
-            SELECT r.ID_Reserva, r.Fecha_Llegada, r.Fecha_Salida,
+            SELECT r.ID_Reserva, r.Fecha_Llegada, r.Fecha_Salida, r.ID_Habitacion,
                    h.Numero_Habitacion, th.Nombre_Tipo,
                    hu.Nombre, hu.Apellido, hu.Email
             FROM Reservas r
@@ -979,13 +998,19 @@ def cancelar_reserva():
         detalles = ejecutar_consulta(query_res, (id_reserva, id_huesped), fetchone=True)
 
         # Marcar como cancelada
-        afectados = ejecutar_consulta(
+        ejecutar_consulta(
             'UPDATE Reservas SET Estado_Reserva = "Cancelada" WHERE ID_Reserva = %s AND ID_Huesped = %s',
             (id_reserva, id_huesped),
             commit=True
         )
 
         if detalles:
+            # Revertir estado físico de la habitación a Disponible
+            ejecutar_consulta(
+                'UPDATE Habitaciones SET Estado = "Disponible" WHERE ID_Habitacion = %s',
+                (detalles['ID_Habitacion'],),
+                commit=True
+            )
             # Enviar correo de cancelación en segundo plano
             enviar_correo_cancelacion_async(detalles)
 
@@ -1055,7 +1080,7 @@ def admin_actualizar_estado_habitacion():
     if not id_habitacion or not estado:
         return jsonify({'error': 'Faltan datos requeridos (id_habitacion, estado).'}), 400
         
-    if estado not in ['Disponible', 'Ocupada', 'Mantenimiento']:
+    if estado not in ['Disponible', 'Ocupada', 'Mantenimiento', 'Reservada']:
         return jsonify({'error': 'Estado no válido.'}), 400
         
     try:
@@ -1194,7 +1219,7 @@ def admin_actualizar_estado_reserva():
     try:
         # Obtener datos de la reserva antes de actualizar para el envío de correo si es cancelación
         query_res = """
-            SELECT r.ID_Reserva, r.Fecha_Llegada, r.Fecha_Salida,
+            SELECT r.ID_Reserva, r.Fecha_Llegada, r.Fecha_Salida, r.ID_Habitacion,
                    h.Numero_Habitacion, th.Nombre_Tipo,
                    hu.Nombre, hu.Apellido, hu.Email
             FROM Reservas r
@@ -1211,9 +1236,16 @@ def admin_actualizar_estado_reserva():
             commit=True
         )
         
-        # Si el admin lo cambia a "Cancelada", enviar correo en segundo plano
-        if estado == 'Cancelada' and detalles:
-            enviar_correo_cancelacion_async(detalles)
+        # Sincronizar estado de habitación física y enviar correo de cancelación
+        if detalles:
+            nuevo_estado_hab = 'Disponible' if estado in ['Cancelada', 'Finalizada'] else 'Reservada'
+            ejecutar_consulta(
+                'UPDATE Habitaciones SET Estado = %s WHERE ID_Habitacion = %s',
+                (nuevo_estado_hab, detalles['ID_Habitacion']),
+                commit=True
+            )
+            if estado == 'Cancelada':
+                enviar_correo_cancelacion_async(detalles)
             
         return jsonify({'mensaje': '¡Estado de reserva actualizado con éxito!'})
     except Exception as err:

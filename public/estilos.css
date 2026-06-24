@@ -1944,6 +1944,13 @@ h1, h2, h3, h4 {
     border-bottom: 1px solid rgba(255, 152, 0, 0.15);
 }
 
+.admin-hab-card.hab-reservada {
+    border-top: 5px solid #6f42c1; /* Púrpura elegante para Reservada */
+    border-left: 1px solid rgba(111, 66, 193, 0.15);
+    border-right: 1px solid rgba(111, 66, 193, 0.15);
+    border-bottom: 1px solid rgba(111, 66, 193, 0.15);
+}
+
 .hab-card-header {
     display: flex;
     justify-content: space-between;

@@ -52,7 +52,7 @@ CREATE TABLE Habitaciones (
     ID_Habitacion INT AUTO_INCREMENT PRIMARY KEY,
     ID_Tipo_Habitacion INT NOT NULL,
     Numero_Habitacion VARCHAR(10) NOT NULL UNIQUE,
-    Estado ENUM('Disponible', 'Ocupada', 'Mantenimiento') DEFAULT 'Disponible',
+    Estado ENUM('Disponible', 'Ocupada', 'Mantenimiento', 'Reservada') DEFAULT 'Disponible',
     Piso INT NOT NULL CHECK (Piso > 0),
     FOREIGN KEY (ID_Tipo_Habitacion) REFERENCES Tipos_Habitacion(ID_Tipo_Habitacion)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

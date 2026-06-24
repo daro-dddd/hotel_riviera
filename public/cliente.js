@@ -1416,6 +1416,7 @@ async function adminCargarHabitaciones() {
             let cardEstadoClase = 'hab-disponible';
             if (hab.Estado === 'Ocupada') cardEstadoClase = 'hab-ocupada';
             if (hab.Estado === 'Mantenimiento') cardEstadoClase = 'hab-mantenimiento';
+            if (hab.Estado === 'Reservada') cardEstadoClase = 'hab-reservada';
             
             const precioMxn = parseFloat(hab.Precio_Noche) * TIPO_CAMBIO;
             
@@ -1436,6 +1437,7 @@ async function adminCargarHabitaciones() {
                             <option value="Disponible" ${hab.Estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
                             <option value="Ocupada" ${hab.Estado === 'Ocupada' ? 'selected' : ''}>Ocupada</option>
                             <option value="Mantenimiento" ${hab.Estado === 'Mantenimiento' ? 'selected' : ''}>Mantenimiento/Limpieza</option>
+                            <option value="Reservada" ${hab.Estado === 'Reservada' ? 'selected' : ''}>Reservada</option>
                         </select>
                     </div>
                 </div>
