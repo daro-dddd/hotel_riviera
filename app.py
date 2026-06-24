@@ -344,6 +344,207 @@ def enviar_correo_cancelacion_async(detalles):
     t = threading.Thread(target=enviar_correo_cancelacion_worker, args=(detalles,))
     t.start()
 
+# --- FUNCIONES DE ENVÍO DE CORREO DE BOLETÍN ---
+def generar_html_correo_suscripcion(email_destinatario):
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+            body {{
+                margin: 0;
+                padding: 0;
+                background-color: #eef5fc;
+                font-family: 'Outfit', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                color: #333333;
+            }}
+            .contenedor {{
+                max-width: 600px;
+                margin: 30px auto;
+                background-color: #ffffff;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 8px 30px rgba(0, 48, 100, 0.08);
+            }}
+            .cabecera {{
+                background-color: #003064;
+                padding: 40px 20px;
+                text-align: center;
+                color: #ffffff;
+            }}
+            .cabecera h1 {{
+                margin: 0;
+                font-size: 26px;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+            }}
+            .cabecera p {{
+                margin: 5px 0 0 0;
+                font-size: 14px;
+                opacity: 0.85;
+            }}
+            .banner-img {{
+                width: 100%;
+                height: 240px;
+                object-fit: cover;
+                display: block;
+            }}
+            .contenido {{
+                padding: 40px 35px;
+            }}
+            .contenido h2 {{
+                margin-top: 0;
+                font-size: 22px;
+                color: #001e3d;
+                font-weight: 600;
+            }}
+            .contenido p {{
+                font-size: 15px;
+                line-height: 1.6;
+                color: #555555;
+            }}
+            .bono-tarjeta {{
+                background-color: #eef5fc;
+                border: 1px dashed #003064;
+                border-radius: 8px;
+                padding: 25px;
+                text-align: center;
+                margin: 30px 0;
+            }}
+            .bono-titulo {{
+                font-size: 13px;
+                font-weight: 700;
+                color: #003064;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 5px;
+            }}
+            .bono-codigo {{
+                font-size: 28px;
+                font-weight: 700;
+                color: #d4a373;
+                margin: 10px 0;
+                letter-spacing: 2px;
+            }}
+            .bono-detalle {{
+                font-size: 12px;
+                color: #777777;
+                margin: 0;
+            }}
+            .beneficios {{
+                margin: 30px 0 10px 0;
+                padding-left: 20px;
+            }}
+            .beneficios li {{
+                font-size: 14px;
+                color: #555555;
+                margin-bottom: 12px;
+                line-height: 1.5;
+            }}
+            .boton-link {{
+                display: block;
+                text-align: center;
+                background-color: #003064;
+                color: #ffffff !important;
+                text-decoration: none;
+                padding: 15px 30px;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 16px;
+                margin-top: 30px;
+                box-shadow: 0 5px 15px rgba(0, 48, 100, 0.2);
+            }}
+            .pie {{
+                background-color: #001e3d;
+                padding: 25px;
+                text-align: center;
+                font-size: 12px;
+                color: #bccbdc;
+            }}
+            .pie p {{
+                margin: 0 0 5px 0;
+            }}
+            .pie a {{
+                color: #d4a373;
+                text-decoration: none;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="contenedor">
+            <div class="cabecera">
+                <h1>Hotel Riviera</h1>
+                <p>Tu Destino Ideal de Descanso</p>
+            </div>
+            
+            <img class="banner-img" src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=600&q=80" alt="Alberca de Lujo del Hotel Riviera">
+            
+            <div class="contenido">
+                <h2>¡Gracias por suscribirte a nuestro boletín!</h2>
+                <p>Nos complace darte la bienvenida a nuestra comunidad exclusiva. A partir de ahora, serás el primero en enterarte de nuestras ofertas especiales, lanzamientos de temporada, novedades del resort y beneficios exclusivos en hospedaje y servicios.</p>
+                
+                <div class="bono-tarjeta">
+                    <p class="bono-titulo">Tu Regalo de Bienvenida</p>
+                    <p class="bono-codigo">RIVIERAWELCOME</p>
+                    <p class="bono-detalle">Úsalo al reservar en nuestro lobby para recibir un 10% de descuento en tu primera estadía de hospedaje.</p>
+                </div>
+                
+                <p>Como suscriptor exclusivo del Hotel Riviera, disfrutarás de:</p>
+                <ul class="beneficios">
+                    <li><strong>Ofertas de Temporada Anticipadas:</strong> Reserva antes que nadie y obtén las mejores tarifas en suites y villas de playa.</li>
+                    <li><strong>Bonos y Descuentos en Servicios Adicionales:</strong> Promociones exclusivas en nuestro Spa & Wellness Center y Restaurante Gourmet.</li>
+                    <li><strong>Guías y Tips de Viaje:</strong> Recomendaciones locales para hacer de tus vacaciones una experiencia inolvidable.</li>
+                </ul>
+                
+                <a href="https://hotel-riviera-3v5f.onrender.com/" class="boton-link">Explorar Habitaciones y Reservar</a>
+            </div>
+            
+            <div class="pie">
+                <p>&copy; 2026 Hotel Riviera. Todos los derechos reservados.</p>
+                <p>Recibes este correo porque te suscribiste a nuestro boletín en <a href="https://hotel-riviera-3v5f.onrender.com/">hotel-riviera-3v5f.onrender.com</a>.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
+def enviar_correo_suscripcion_worker(email_destinatario):
+    try:
+        smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+        smtp_port = int(os.getenv("SMTP_PORT", 587))
+        smtp_user = os.getenv("SMTP_USER", "")
+        smtp_password = os.getenv("SMTP_PASSWORD", "")
+        
+        if not smtp_user or "tu_correo@gmail.com" in smtp_user:
+            print(f"[Simulación de Correo] Envío de confirmación de boletín a {email_destinatario} simulado con éxito.")
+            return
+            
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "¡Bienvenido al boletín exclusivo de Hotel Riviera!"
+        msg['From'] = smtp_user
+        msg['To'] = email_destinatario
+        
+        html_content = generar_html_correo_suscripcion(email_destinatario)
+        part_html = MIMEText(html_content, 'html')
+        msg.attach(part_html)
+        
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, email_destinatario, msg.as_string())
+        server.quit()
+        
+        print(f"[Email Enviado] Confirmación de suscripción al boletín enviada a {email_destinatario} con éxito.")
+    except Exception as e:
+        print(f"[Error Email] Ocurrió una falla al enviar el correo de suscripción: {e}")
+
+def enviar_correo_suscripcion_async(email_destinatario):
+    t = threading.Thread(target=enviar_correo_suscripcion_worker, args=(email_destinatario,))
+    t.start()
+
 
 # =====================================================================
 # RUTAS DE ARCHIVOS ESTÁTICOS
@@ -811,6 +1012,9 @@ def suscribir():
             (email,),
             commit=True
         )
+        # Enviar correo de confirmación de boletín en segundo plano
+        enviar_correo_suscripcion_async(email)
+        
         return jsonify({'mensaje': '¡Gracias por suscribirte a nuestro boletín!'})
     except Exception as err:
         print(f"Error al suscribir: {err}")
