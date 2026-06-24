@@ -60,11 +60,28 @@ function obtenerFechaFormateada(diasAdicionales = 0) {
 // =====================================================================
 
 // Verifica si hay un usuario guardado en el navegador (localStorage)
-function verificarSesionLocal() {
+async function verificarSesionLocal() {
     const datosGuardados = localStorage.getItem('usuario_riviera');
     if (datosGuardados) {
         usuarioLogueado = JSON.parse(datosGuardados);
         actualizarMenuUsuario(true);
+        
+        // Sincronizar silenciosamente en segundo plano el perfil del usuario para obtener teléfono u otros campos actualizados
+        if (usuarioLogueado && usuarioLogueado.id) {
+            try {
+                const respuesta = await fetch(`/api/perfil?id=${usuarioLogueado.id}`);
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    if (datos.usuario) {
+                        usuarioLogueado = datos.usuario;
+                        localStorage.setItem('usuario_riviera', JSON.stringify(usuarioLogueado));
+                        actualizarMenuUsuario(true);
+                    }
+                }
+            } catch (err) {
+                console.warn('Error al sincronizar el perfil con el servidor:', err);
+            }
+        }
     } else {
         actualizarMenuUsuario(false);
     }

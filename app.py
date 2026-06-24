@@ -403,7 +403,8 @@ def registrar():
                 'id': id_creado,
                 'nombre': nombre,
                 'apellido': apellido,
-                'email': email
+                'email': email,
+                'telefono': telefono
             }
         }), 201
     except Exception as err:
@@ -470,6 +471,34 @@ def iniciar_sesion():
     except Exception as err:
         print(f"Error en login: {err}")
         return jsonify({'error': 'Error del servidor al iniciar sesión.'}), 500
+
+# 2.5. Obtener Perfil del Huésped
+@app.route('/api/perfil', methods=['GET'])
+def obtener_perfil():
+    huesped_id = request.args.get('id')
+    if not huesped_id:
+        return jsonify({'error': 'Falta el ID del huésped.'}), 400
+    try:
+        usuario = ejecutar_consulta(
+            'SELECT ID_Huesped, Nombre, Apellido, Email, Telefono, Es_Administrador FROM Huespedes WHERE ID_Huesped = %s',
+            (huesped_id,),
+            fetchone=True
+        )
+        if not usuario:
+            return jsonify({'error': 'Usuario no encontrado.'}), 404
+        return jsonify({
+            'usuario': {
+                'id': usuario['ID_Huesped'],
+                'nombre': usuario['Nombre'],
+                'apellido': usuario['Apellido'],
+                'email': usuario['Email'],
+                'telefono': usuario['Telefono'],
+                'es_admin': bool(usuario['Es_Administrador'])
+            }
+        })
+    except Exception as err:
+        print(f"Error al obtener perfil: {err}")
+        return jsonify({'error': 'Error de base de datos al obtener el perfil.'}), 500
 
 # 3. Consultar Habitaciones Disponibles por rango de fechas
 @app.route('/api/habitaciones-disponibles', methods=['GET'])
