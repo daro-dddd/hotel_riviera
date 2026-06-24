@@ -85,7 +85,7 @@ Para subir el servidor Python y el frontend, utilizaremos un servicio como **Ren
    - **Region**: Selecciona la más cercana (e.g., Oregon o Ohio).
    - **Branch**: `main`
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn servidor:app` (Render detectará automáticamente el archivo `Procfile` si ya existe).
+   - **Start Command**: `gunicorn app:app` (Render detectará automáticamente el archivo `Procfile` si ya existe).
 5. Haz clic en **Advanced** para agregar las **Variables de Entorno (Environment Variables)**:
    - Deberás agregar las credenciales de la base de datos de la nube que configuraste en la Parte 1:
      - `DB_HOST` = `tu_host_de_la_nube`
