@@ -97,7 +97,7 @@ function actualizarMenuUsuario(sesionActiva) {
         let botonAdmin = '';
         if (usuarioLogueado.es_admin) {
             botonAdmin = `
-                <button class="btn btn-primario" onclick="abrirPanelAdmin()" style="background-color: var(--azul-oscuro); margin-right: 10px;">
+                <button class="btn btn-primario" onclick="abrirPanelAdmin()" style="background-color: var(--azul-oscuro);">
                     <i class="fa-solid fa-gauge-high"></i> Panel Administrador
                 </button>
             `;
@@ -106,7 +106,7 @@ function actualizarMenuUsuario(sesionActiva) {
         let botonUsuario = '';
         if (usuarioLogueado.es_admin) {
             botonUsuario = `
-                <span class="btn-usuario-estatico" style="color: white; margin-right: 15px; display: inline-flex; align-items: center; gap: 8px; font-weight: 500;">
+                <span class="btn-usuario-estatico" style="color: var(--azul-oscuro); background-color: var(--azul-celeste); border: 1px solid rgba(0, 48, 100, 0.15); display: inline-flex; align-items: center; gap: 8px; font-weight: 500;">
                     <i class="fa-solid fa-circle-user"></i> Hola, ${usuarioLogueado.nombre}
                 </span>
             `;
@@ -813,7 +813,7 @@ async function procesarPago(event) {
             
             // --- CONSTRUIR TICKET DIGITAL (PASO 4) ---
             document.getElementById('reserva-paso-4').classList.remove('oculto');
-            document.getElementById('titulo-paso-reserva').innerHTML = `<i class="fa-solid fa-square-check" style="color:var(--verde-confirmar);"></i> ¡Reserva Confirmada!`;
+            document.getElementById('titulo-paso-reserva').innerHTML = `¡Reserva Confirmada!`;
             
             // Folio e Información General
             document.getElementById('ticket-folio').textContent = `#${datos.id_reserva}`;

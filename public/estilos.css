@@ -1174,6 +1174,7 @@ h1, h2, h3, h4 {
 
 .modal-reserva-form h2 {
     font-size: 1.6rem;
+    text-align: center;
 }
 
 .modal-reserva-form form {
@@ -2170,5 +2171,19 @@ h1, h2, h3, h4 {
     display: flex;
     justify-content: center;
     gap: 12px;
+}
+
+/* Ajustes responsivos para evitar que el menú colisione en pantallas medianas */
+@media (max-width: 1200px) {
+    .enlaces-nav {
+        gap: 15px;
+    }
+    .usuario-seccion {
+        gap: 8px;
+    }
+    .btn, .btn-usuario-estatico {
+        padding: 8px 16px;
+        font-size: 0.88rem;
+    }
 }
 
