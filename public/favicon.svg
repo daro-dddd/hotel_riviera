@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Fondo circular azul oscuro de la marca -->
+  <circle cx="256" cy="256" r="240" fill="#003064" />
+  <!-- Contorno de acento en dorado -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#d4a373" stroke-width="12" />
+  <!-- Símbolo estilizado de edificio de hotel/resort con estrellas -->
+  <g fill="#ffffff">
+    <!-- Estrellas de prestigio arriba -->
+    <path d="M256 70 l12 24 l26 4 l-18 18 l4 26 l-24 -12 l-24 12 l4 -26 l-18 -18 l26 -4 z" fill="#d4a373" />
+    <path d="M186 90 l8 16 l18 3 l-13 13 l3 18 l-16 -8 l-16 8 l3 -18 l-13 -13 l18 -3 z" fill="#d4a373" />
+    <path d="M326 90 l8 16 l18 3 l-13 13 l3 18 l-16 -8 l-16 8 l3 -18 l-13 -13 l18 -3 z" fill="#d4a373" />
+    <!-- Estructura del hotel -->
+    <path d="M120 400 h272 v-180 h-272 z" opacity="0.9" />
+    <path d="M210 400 v-70 h92 v70 z" fill="#003064" />
+    <!-- Ventanas del hotel -->
+    <rect x="150" y="250" width="40" height="40" rx="4" fill="#d4a373" />
+    <rect x="320" y="250" width="40" height="40" rx="4" fill="#d4a373" />
+    <rect x="150" y="310" width="40" height="40" rx="4" fill="#d4a373" />
+    <rect x="320" y="310" width="40" height="40" rx="4" fill="#d4a373" />
+    <!-- Techo triangular clásico -->
+    <polygon points="90,220 256,120 422,220" fill="#d4a373" />
+  </g>
+</svg>
