@@ -718,11 +718,11 @@ def habitaciones_disponibles():
     salida = request.args.get('salida')
 
     try:
-        # Si no mandan fechas, regresamos todos los tipos de habitaciones con su conteo de físicas activas (Disponibles o Reservadas)
+        # Si no mandan fechas, regresamos todos los tipos de habitaciones con su conteo de físicas activas (Únicamente Disponibles)
         if not llegada or not salida:
             query = """
                 SELECT th.ID_Tipo_Habitacion, th.Nombre_Tipo, th.Descripcion, th.Capacidad_Maxima, th.Precio_Noche,
-                       COALESCE(SUM(CASE WHEN h.Estado IN ('Disponible', 'Reservada') THEN 1 ELSE 0 END), 0) as Habitaciones_Disponibles
+                       COALESCE(SUM(CASE WHEN h.Estado = 'Disponible' THEN 1 ELSE 0 END), 0) as Habitaciones_Disponibles
                 FROM Tipos_Habitacion th
                 LEFT JOIN Habitaciones h ON th.ID_Tipo_Habitacion = h.ID_Tipo_Habitacion
                 GROUP BY th.ID_Tipo_Habitacion

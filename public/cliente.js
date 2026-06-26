@@ -343,26 +343,29 @@ async function cargarHabitaciones(llegada = '', salida = '', totalPersonas = 0) 
             
             const foto = fotosMapeo[hab.Nombre_Tipo] || 'imagenes/doble.png';
             
-            // Ya no mostramos el badge de "X disponibles" porque se ve feo.
-            // Pero usamos el valor para saber si hay disponibilidad física de habitaciones.
+            const esAgotada = hab.Habitaciones_Disponibles !== undefined && parseInt(hab.Habitaciones_Disponibles) === 0;
+            const tarjetaClase = esAgotada ? 'tarjeta-habitacion agotada' : 'tarjeta-habitacion';
+            const badgeAgotada = esAgotada ? '<span class="badge-agotada"><i class="fa-solid fa-ban"></i> No disponible</span>' : '';
+            
             let botonHtml = `
                 <button class="btn btn-primario" onclick="intentarReservar(${hab.ID_Tipo_Habitacion})">
                     <i class="fa-regular fa-calendar-check"></i> Reservar Habitación
                 </button>
             `;
             
-            if (hab.Habitaciones_Disponibles !== undefined && parseInt(hab.Habitaciones_Disponibles) === 0) {
+            if (esAgotada) {
                 botonHtml = `
                     <button class="btn" style="background-color: #e0e0e0; color: #888; border: 1px solid #ccc; cursor: not-allowed; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;" disabled>
-                        <i class="fa-solid fa-ban"></i> Sin disponibilidad
+                        <i class="fa-solid fa-ban"></i> No disponible
                     </button>
                 `;
             }
                  
             const precioMxn = parseFloat(hab.Precio_Noche) * TIPO_CAMBIO;
             const tarjetaHtml = `
-                <div class="tarjeta-habitacion">
+                <div class="${tarjetaClase}">
                     <div class="habitacion-img-contenedor">
+                        ${badgeAgotada}
                         <img src="${foto}" alt="${hab.Nombre_Tipo}">
                     </div>
                     <div class="habitacion-detalles">

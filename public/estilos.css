@@ -496,6 +496,39 @@ h1, h2, h3, h4 {
     margin-right: 5px;
 }
 
+/* Estilos para habitación agotada / no disponible */
+.tarjeta-habitacion.agotada {
+    opacity: 0.65;
+    filter: grayscale(20%);
+    position: relative;
+    pointer-events: none; /* Bloquea cualquier clic o interacción con la tarjeta */
+}
+
+.tarjeta-habitacion.agotada .btn {
+    background-color: #e0e0e0 !important;
+    color: #888 !important;
+    border: 1px solid #ccc !important;
+    cursor: not-allowed !important;
+}
+
+.badge-agotada {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background-color: var(--rojo-cancelar);
+    color: var(--blanco);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    z-index: 10;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 /* Alertas para la vista */
 .alerta {
     padding: 15px 20px;
